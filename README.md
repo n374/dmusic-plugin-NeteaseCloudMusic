@@ -17,13 +17,15 @@
 ```
 sudo apt-add-repository ppa:noobslab/deepin-sc
 sudo apt-get update
-sudo apt-get install deepin-music-player```
+sudo apt-get install deepin-music-player
+```
 
 - **安装网易云音乐插件**
 ```
 git clone https://github.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic.git
 cd dmusic-plugin-NeteaseCloudMusic
-python install.py```
+python install.py
+```
 
 使用
 ----
