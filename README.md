@@ -1,59 +1,31 @@
-百度音乐插件(深度音乐播放器)
+网易云音乐插件(深度音乐播放器)
 ========================
+
+基于sumary的[dmusic-plugin-baidumusic](https://github.com/sumary/dmusic-plugin-baidumusic)修改而成
+
+使用了[NetEaseMusicBox](https://github.com/bluetomlee/NetEase-MusicBox)中的网易云音乐[API](https://github.com/bluetomlee/NetEase-MusicBox/blob/master/src/api.py)
+
 
 特性
 --------
-* 支持百度账号登录 
-* 可以管理本地试听列表
-* 可以管理在线歌单
-* 支持收藏歌曲并同步
-* 高质量音频(320kbps)
 
-LinuxDeepin系统安装方法
+目前仅支持通过用户id播放用户的歌单
+
+安装方法
 ----------------------
-1. 安装依赖
+- **安装深度音乐播放器**
 ```
-sudo apt-get install python-javascriptcore git
-```
+sudo apt-add-repository ppa:noobslab/deepin-sc
+sudo apt-get update
+sudo apt-get install deepin-music-player```
 
-2. 安装百度音乐插件
+- **安装网易云音乐插件**
 ```
-git clone https://github.com/sumary/dmusic-plugin-baidumusic.git
-cd dmusic-plugin-baidumusic
-cp -r baidumusic ~/.local/share/deepin-music-player/plugins/
-```
-
-其它Linux发行版
-------------------
-
-1. 安装 cython libwebkitgtk-dev python-dev git, 例如:
-```
-sudo apt-get install cython libwebkitgtk-dev python-dev git
-```
-
-2. 安装pyjavascriptcore
-```
-git clone https://github.com/sumary/pyjavascriptcore.git
-cd pyjavascriptcore
-sudo python setup.py install
-```
-
-3. 安装百度音乐插件
-```
-git clone https://github.com/sumary/dmusic-plugin-baidumusic.git
-cd dmusic-plugin-baidumusic
-cp -r baidumusic ~/.local/share/deepin-music-player/plugins/
-```
+git clone https://github.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic.git
+cd dmusic-plugin-NeteaseCloudMusic
+python install.py```
 
 使用
 ----
 
-运行深度音乐， 选项设置->附加组件 中启用百度音乐即可
-
-
-贡献者
--------
-
-* [@lovesnow](https://github.com/lovesnow)
-* [@binyuj](https://github.com/binyuj)
-
+运行深度音乐， 选项设置->附加组件 中启用网易云音乐即可

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
@@ -17,15 +17,15 @@ from logger import Logger
 class Nothing(object):
     pass
 
-_NONE = Nothing() # used by event for a safe None replacement
+# used by event for a safe None replacement
+_NONE = Nothing()
 
 class _WeakMethod(object):
     """Represent a weak bound method, i.e. a method doesn't keep alive the
     object that it is bound to. It uses WeakRef which, used on its own,
     produces weak methods that are dead on creation, not very useful.
-    Typically, you will use the getRef() function instead of using
-    this class directly. """
-
+    Typically, you will use the getRef() function instead of using this
+    class directly. """
     def __init__(self, method, notifyDead = None):
         """
             The method must be bound. notifyDead will be called when
@@ -50,10 +50,9 @@ class _WeakMethod(object):
     def __eq__(self, method2):
         if not isinstance(method2, _WeakMethod):
             return False
-        return      self.fun      is method2.fun \
+        return self.fun is method2.fun \
                 and self.objRef() is method2.objRef() \
                 and self.objRef() is not None
-
 
     def __hash__(self):
         return hash(self.fun)
@@ -72,9 +71,9 @@ class _WeakMethod(object):
 def _getWeakRef(obj, notifyDead=None):
     """
         Get a weak reference to obj. If obj is a bound method, a _WeakMethod
-        object, that behaves like a WeakRef, is returned, if it is
-        anything else a WeakRef is returned. If obj is an unbound method,
-        a ValueError will be raised.
+        object, that behaves like a WeakRef, is returned, if it is anything
+        else a WeakRef is returned. If obj is an unbound method, a ValueError
+        will be raised
     """
     if ismethod(obj):
         createRef = _WeakMethod
@@ -100,7 +99,7 @@ class Event(object):
         self.object = obj or _NONE
         self.data = data
         self.time = time
-        
+
 class Callback(object):
     """
         Represents a callback
@@ -118,7 +117,6 @@ class Callback(object):
 
     def vanished(self, ref):
         self.valid = False
-        
 
 class EventManager(Logger):
     """
@@ -140,7 +138,7 @@ class EventManager(Logger):
             event: the Event to emit [Event]
         """
         event = Event(signal, obj, data, time.time())
-        
+
         with self.lock:
             callbacks = set()
             for tcall in set([_NONE, event.signal]):
@@ -150,7 +148,7 @@ class EventManager(Logger):
                     except KeyError:
                         pass
 
-            # now call them
+            # Now call them
             for cb in callbacks:
                 try:
                     if not cb.valid:
@@ -161,26 +159,25 @@ class EventManager(Logger):
                     elif event.time >= cb.time:
                         if self.use_logger and (not self.logger_filter or \
                                 re.search(self.logger_filter, event.signal)):
-                                self.logdebug("Attempting to call "
+                            self.logdebug("Attempting to call"
                                     "%(function)s in response "
                                     "to %(event)s." % {
                                         'function': cb.wfunction(),
                                         'event': event.signal})
-
-                        cb.wfunction().__call__(event.object, event.data, *cb.args, **cb.kwargs)
-                            
+                        cb.wfunction().__call__(event.object, event.data,
+                                *cb.args, **cb.kwargs)
                 except Exception:
-                    # something went wrong inside the function we're calling
+                    # Something went wrong inside the funciton we're calling
                     traceback.print_exc(file=sys.stdout)
                     self.logdebug("Event callback exception caught!")
-                    
         if self.use_logger:
             if not self.logger_filter or re.search(self.logger_filter,
-                event.signal):
-                self.logdebug("Sent '%(signal)s' event from "
-                    "'%(object)s' with data '%(data)s'." %
-                        {'signal' : event.signal, 'object' : repr(event.object),
-                        'data' : repr(event.data)})
+                    event.signal):
+                self.logdebug("Sent '%(signal)s' event from"
+                        "'%(object)s' with data '%(data)s'." %
+                           {'signal' : event.signal,
+                            'object' : repr(event.object),
+                            'data' : repr(event.data)})
 
     def connect(self, signal, function, obj=None, *args, **kwargs):
         """
@@ -188,14 +185,14 @@ class EventManager(Logger):
             You should always specify at least one of signal or object.
 
             @param function: The function to call [function]
-            @param signal: The 'signal' or 'name' of event to listen for. Defaults
-                to any. [string]
-            @param obj: The object to listen to events from. Defaults
-                to any. [string]
+            @param signal: The 'signal' or 'name' of event to listen for.
+                            Default to any. [string]
+            @param obj: The object to listen to events from. Default to
+                            to any. [string]
         """
-        
+
         with self.lock:
-            # add the specified categories if needed.
+            # Add the specified categories if needed.
             if not self.callbacks.has_key(signal):
                 self.callbacks[signal] = weakref.WeakKeyDictionary()
             if obj is None:
@@ -205,7 +202,7 @@ class EventManager(Logger):
             except KeyError:
                 callbacks = self.callbacks[signal][obj] = []
 
-            # add the actual callback
+            # Add the actual callback
             callbacks.append(Callback(function, time.time(), args, kwargs))
 
         if self.use_logger:
@@ -220,6 +217,7 @@ class EventManager(Logger):
             The parameters must match those given when the callback was
             registered. (minus any additional args)
         """
+
         if obj is None:
             obj = _NONE
         remove = []
@@ -230,9 +228,7 @@ class EventManager(Logger):
                 for cb in callbacks:
                     if cb.wfunction() == function:
                         remove.append(cb)
-            except KeyError:
-                return
-            except TypeError:
+            except (KeyError, TypeError):
                 return
 
             for cb in remove:
@@ -243,6 +239,4 @@ class EventManager(Logger):
                 self.logdebug("Removed callback %s for [%s, %s]" %
                         (function, signal, obj))
 
-                
-event_manager = EventManager()                
-
+event_manager = EventManager()
