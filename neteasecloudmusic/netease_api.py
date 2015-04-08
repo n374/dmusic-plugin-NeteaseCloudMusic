@@ -32,7 +32,8 @@ import re
 import json
 import requests
 import hashlib
-
+import utils
+from xdg_support import get_cache_file
 
 # list去重
 def uniq(arr):
@@ -55,13 +56,15 @@ class NetEase(object):
             'Referer': 'http://music.163.com/search/',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36'
         }
+        self.cookie_db_file = get_cache_file("neteasecloudmusic/cookie.db")
+        self.cookies = self.load_cookie() or self.login_and_get_cookie()
 
     def login_and_get_cookie(self, username, password):
         s = requests.Session()
         action = 'http://music.163.com/api/login/'
         data = {
             'username': username,
-            'password': hashlib.md5(password).hexdigest(),
+            'password': hashlib.md5(str(password)).hexdigest(),
             'rememberLogin': 'true'
         }
         try:
@@ -71,10 +74,20 @@ class NetEase(object):
                 headers=self.header,
                 timeout=default_timeout
             )
+            self.save_cookie(s.cookies)
             return s.cookies
         except:
             print None
 
+    def save_cookie(self, cookie=None):
+        if cookie:
+            utils.save_db(cookie, self.cookie_db_file)
+
+    def load_cookie(self):
+        try:
+            return utils.load_db(self.cookie_db_file)
+        except:
+            return None
 
     def httpRequest(self, method, action, query=None, urlencoded=None, callback=None, timeout=None):
         if(method == 'GET'):
