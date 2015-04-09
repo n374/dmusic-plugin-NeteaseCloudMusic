@@ -9,9 +9,13 @@
 特性
 --------
 
-~~目前仅支持通过用户id播放用户的歌单~~
 
 支持网易账号登录
+
+播放创建的歌单、收藏的歌单
+
+![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot001.png)
+![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot002.png)
 
 安装方法
 ----------------------
