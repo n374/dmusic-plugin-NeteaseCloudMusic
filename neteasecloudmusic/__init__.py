@@ -7,8 +7,8 @@ from nls import _
 from helper import Dispatcher, SignalCollector
 from widget.tab_box import ListTab
 
-music_browser = MusicBrowser()
 music_list = MusicPlaylist()
+music_browser = MusicBrowser()
 radio_list_tab = ListTab(_("网易云音乐"), music_list, music_browser)
 
 def enable(dmusic):

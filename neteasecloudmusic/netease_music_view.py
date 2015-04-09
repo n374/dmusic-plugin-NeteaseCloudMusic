@@ -80,7 +80,11 @@ class MusicView(TreeView):
     def on_music_view_double_click(self, widget, item, column, x, y):
         if item:
             song = item.get_song()
-            self.request_song(song, play=True)
+            if self.view_type==self.PLAYING_LIST_TYPE:
+                self.request_song(song, play=True)
+            else:
+                self.add_and_play_songs = [song]
+                event_manager.emit('add-and-play')
 
     def on_music_view_press_return(self, widget, items):
         if items:
