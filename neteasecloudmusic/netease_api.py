@@ -57,7 +57,7 @@ class NetEase(object):
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36'
         }
         self.cookie_db_file = get_cache_file("neteasecloudmusic/cookie.db")
-        self.cookies = self.load_cookie() or self.login_and_get_cookie()
+        self.cookies = self.load_cookie()
 
     def login_and_get_cookie(self, username, password):
         s = requests.Session()
@@ -74,14 +74,25 @@ class NetEase(object):
                 headers=self.header,
                 timeout=default_timeout
             )
+            connection.encoding = "UTF-8"
+            connection = json.loads(connection.text)
+            self.uid = connection['account']['id']
             self.save_cookie(s.cookies)
+            self.cookies = s.cookies
             return s.cookies
         except:
-            print None
+            return None
+
+    def get_uid(self):
+        try:
+            self.uid = re.match('\d+',
+                    dict(self.load_cookie())['NETEASE_WDA_UID']).group()
+            return self.uid
+        except:
+            return None
 
     def save_cookie(self, cookie=None):
-        if cookie:
-            utils.save_db(cookie, self.cookie_db_file)
+        utils.save_db(cookie, self.cookie_db_file)
 
     def load_cookie(self):
         try:
@@ -91,7 +102,6 @@ class NetEase(object):
 
     def httpRequest(self, method, action, query=None, urlencoded=None, callback=None, timeout=None):
         if(method == 'GET'):
-            print self.cookies
             url = action if (query == None) else (action + '?' + query)
             connection = requests.get(url, headers=self.header,
                     timeout=default_timeout, cookies=self.cookies)
@@ -124,12 +134,15 @@ class NetEase(object):
 
     # 用户歌单
     def user_playlist(self, uid, offset=0, limit=100):
-        action = 'http://music.163.com/api/user/playlist/?offset=' + str(offset) + '&limit=' + str(limit) + '&uid=' + str(uid)
-        try:
-            data = self.httpRequest('GET', action)
-            return data['playlist']
-        except:
-            return []
+        if uid:
+            action = 'http://music.163.com/api/user/playlist/?offset=' + str(offset) + '&limit=' + str(limit) + '&uid=' + str(uid)
+            try:
+                data = self.httpRequest('GET', action)
+                return data['playlist']
+            except:
+                return []
+        else:
+            return None
 
     # 搜索单曲(1)，歌手(100)，专辑(10)，歌单(1000)，用户(1002) *(type)*
     def search(self, s, stype=1, offset=0, total='true', limit=60):

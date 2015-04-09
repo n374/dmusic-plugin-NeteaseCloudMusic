@@ -149,7 +149,7 @@ class MusicBrowser(gtk.VBox):
         # Login Dialog
         self.login_dialog = LoginDialog()
 
-        event_manager.connect("login-dialog-run", self.on_login_dialog_run)
+        #event_manager.connect("login-dialog-run", self.on_login_dialog_run)
         event_manager.connect("login-success", self.on_login_success)
 
     def on_login_dialog_run(self, obj, data):

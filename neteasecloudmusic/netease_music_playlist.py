@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import gobject
 import gtk
 import copy
 
@@ -32,6 +33,13 @@ def login_required(func):
     return inner
 
 class MusicPlaylist(gtk.VBox):
+    #__gsignals__ = {
+            #"login-success" :
+                #(gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+            #"empty-items" :
+                #(gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
+            #}
+
     def __init__(self):
         super(MusicPlaylist, self).__init__()
 
@@ -58,8 +66,8 @@ class MusicPlaylist(gtk.VBox):
         self.category_list.set_size_request(CATEGROYLIST_WIDTH, -1)
         self.category_list.connect("single-click-item",
                 self.on_category_single_click)
-        #self.category_list.connect("right-press-items",
-                #self.on_category_right_press)
+        self.category_list.connect("right-press-items",
+                self.on_category_right_press)
         #self.category_list.set_highlight_item(self.playing_list_item)
 
         # Set view_box
@@ -74,6 +82,8 @@ class MusicPlaylist(gtk.VBox):
         main_paned.pack2(self.view_box, True, False)
 
         """ Set events"""
+        event_manager.connect("login-success", self.load_online_lists)
+        event_manager.connect("relogin", self.relogin)
         #event_manager.connect("login-success",
                 #self.on_event_login_success)
         #event_manager.connect("collect-songs",
@@ -92,7 +102,11 @@ class MusicPlaylist(gtk.VBox):
         self.new_list_thread_id = 0
 
         #self.load()
-        self.load_online_lists()
+        if nplayer.is_login:
+            self.load_online_lists('')
+        else:
+            self.login_item = MusicListItem("登录", is_login_item=True)
+            self.category_list.add_items([self.login_item])
         #self.load_status()
 
         self.add(main_paned)
@@ -148,8 +162,8 @@ class MusicPlaylist(gtk.VBox):
 
     def on_category_right_press(self, widget, x, y, item, column):
         menu_items = [
-                (None, "新建试听列表", self.new_listen_list),
-                (None, "新建在线歌单", self.new_online_list),
+                #(None, "新建歌单", self.new_online_list),
+                (None, "重新登录", self.relogin)
                 ]
         if not item:
             Menu(menu_items, True).show((x, y))
@@ -185,6 +199,14 @@ class MusicPlaylist(gtk.VBox):
         if menu_items:
             Menu(menu_items, True).show((x, y))
 
+    def relogin(self):
+        nplayer.relogin()
+        self.category_list.delete_items([item for item in self.items if
+            item.list_type!=MusicListItem.PLAYING_LIST_TYPE])
+        self.login_item = MusicListItem("登录", is_login_item=True)
+        self.category_list.add_items([self.login_item])
+        self.switch_view(self.login_item)
+
     def switch_view(self, item):
         """ switch view_box's content """
 
@@ -213,16 +235,6 @@ class MusicPlaylist(gtk.VBox):
                 item.add_songs(songs)
                 items.append(item)
             self.category_list.add_items(items, insert_pos=1)
-
-    def new_listen_list(self):
-
-        def create_list(name):
-            if name.strip():
-                item = MusicListItem(name, list_type=MusicListItem.LOCAL_TYPE)
-                self.category_list.add_items([item], insert_pos=1)
-
-        input_dialog = InputDialog("新建试听列表", "", 300, 100, create_list)
-        input_dialog.show_all()
 
     def del_listen_list(self, item):
         def del_list():
@@ -267,10 +279,12 @@ class MusicPlaylist(gtk.VBox):
 
         self.current_item.add_songs(data, play=play)
 
-    def load_online_lists(self):
-        if not nplayer.is_login:
-            return
-
+    def load_online_lists(self, args, *kwargs):
+        try:
+            self.category_list.delete_items([item for item in self.items if
+                item.list_type!=MusicListItem.PLAYING_LIST_TYPE])
+        except:
+            pass
         self.online_thread_id += 1
         thread_id = copy.deepcopy(self.online_thread_id)
 

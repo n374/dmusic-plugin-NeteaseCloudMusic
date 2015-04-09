@@ -25,11 +25,10 @@ class MusicPlayer(NetEase):
         self.load()
 
     def initial_data(self):
-        self.logged = None
-        self.cookie = ""
-        self.username = ""
-        #self.uid = NetEase().login()['profile']['userId']
-        self.uid = 31142274
+        self.logged = self.load_cookie()
+        #self.cookie = ""
+        #self.username = ""
+        self.uid = self.get_uid()
 
     @property
     def ClientInfo(self):
@@ -72,17 +71,14 @@ class MusicPlayer(NetEase):
 
     @property
     def is_login(self):
-        return 1
         if not self.logged:
-            self.logged = NetEase().login()
-
-    def Login(self):
-        return
-        event_manager.emit("login-dialog-run")
+            self.logged = self.load_cookie()
+        return self.logged
 
     def relogin(self):
+        self.save_cookie(None)
         self.initial_data()
-        self.Login()
+        self.logged = False
 
     def alert(self, *args):
         print args

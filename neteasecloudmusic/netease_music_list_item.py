@@ -12,6 +12,7 @@ from widget.ui_utils import (draw_single_mask, draw_separator, switch_tab,
                              create_upper_align, create_bottom_align,
                              draw_alpha_mask)
 
+import utils
 from widget.ui import ComplexButton
 from constant import PLAYLIST_WIDTH, CATEGROYLIST_WIDTH
 from netease_music_view import MusicView, nplayer
@@ -36,8 +37,15 @@ class LoginBox(gtk.HBox):
         super(LoginBox, self).__init__()
 
         self.login_button = LoginButton(callback)
+        self.username_entry = gtk.Entry()
+        self.username_entry.set_text('username')
+        self.password_entry = gtk.Entry()
+        self.password_entry.set_text('password')
+        self.password_entry.set_visibility(False)
         content_box = gtk.VBox()
         content_box.pack_start(create_bottom_align(), True, True)
+        content_box.pack_start(self.username_entry, False, False)
+        content_box.pack_start(self.password_entry, False, False)
         content_box.pack_start(self.login_button, False, False)
         content_box.pack_start(create_upper_align(), True, True)
 
@@ -58,8 +66,9 @@ class MusicListItem(TreeItem):
     FAVORITE_LIST_TYPE = 2
     CREATED_LIST_TYPE = 3
     COLLECTED_LIST_TYPE = 4
+    LOGIN_LIST_TYPE = 5
 
-    def __init__(self, list_data, is_online_list=False):
+    def __init__(self, list_data, is_online_list=False, is_login_item=False):
         TreeItem.__init__(self)
 
         self.column_index = 0
@@ -87,6 +96,8 @@ class MusicListItem(TreeItem):
                 self.list_type = self.CREATED_LIST_TYPE
         else:
             self.list_type = self.PLAYING_LIST_TYPE
+        if is_login_item:
+            self.list_type = self.LOGIN_LIST_TYPE
         self.has_separator = 1
         self.separator_height = 4
         self.item_width = CATEGROYLIST_WIDTH
@@ -96,12 +107,25 @@ class MusicListItem(TreeItem):
         self.song_view = MusicView(data=self.data, view_type=self.list_type)
         self.song_view.set_size_request(PLAYLIST_WIDTH, -1)
 
-        event_manager.connect("login-success", self.on_event_login_success)
+        if is_login_item:
+            self.login_box = LoginBox(lambda w:
+                    event_manager.emit("login"))
 
-        self.login_box = LoginBox(lambda w:
-                event_manager.emit("login-dialog-run"))
+            event_manager.connect("login", self.login)
+
+        #event_manager.connect("login-success", self.on_event_login_success)
 
         self.main_box = gtk.VBox()
+
+    def login(self, args=None, *kwargs):
+        username = self.login_box.username_entry.get_text()
+        password = self.login_box.password_entry.get_text()
+        utils.ThreadFetch(
+            fetch_funcs=(nplayer.login_and_get_cookie, (username,password)),
+            success_funcs=(self.login_success, ())).start()
+
+    def login_success(self, args, *kwargs):
+        event_manager.emit('login-success')
 
     def init_pixbufs(self):
         if self.list_type == self.PLAYING_LIST_TYPE:
@@ -213,7 +237,7 @@ class MusicListItem(TreeItem):
     @property
     def list_widget(self):
         switch_tab(self.main_box, self.song_view)
-        if not nplayer.is_login:
+        if not nplayer.is_login and self.list_type == MusicView.LOGIN_LIST_TYPE:
             switch_tab(self.main_box, self.login_box)
 
         return self.main_box

@@ -36,6 +36,7 @@ class MusicView(TreeView):
     FAVORITE_LIST_TYPE = 2
     CREATED_LIST_TYPE = 3
     COLLECTED_LIST_TYPE = 4
+    LOGIN_LIST_TYPE = 5
 
     __gsignals__ = {
             "begin-add-items" :
@@ -355,7 +356,6 @@ class MusicView(TreeView):
             self.clear()
 
         if not nplayer.is_login:
-            print 'not login'
             return
 
         if not self.view_data:
