@@ -96,20 +96,20 @@ class MusicPlaylist(gtk.VBox):
                 #self.on_event_play_songs)
         #event_manager.connect("save-listen-lists",
                 #self.on_event_save_listen_lists)
-        #event_manager.connect("save-playlist-status",
-                #self.save_status)
+        event_manager.connect("save-playlist-status",
+                self.save_status)
 
         # Load playlists
         self.online_thread_id = 0
         self.new_list_thread_id = 0
 
-        #self.load()
         if nplayer.is_login:
             self.load_online_lists('')
         else:
             self.login_item = MusicListItem("登录", is_login_item=True)
             self.category_list.add_items([self.login_item])
-        #self.load_status()
+        self.load()
+        self.load_status()
 
         self.add(main_paned)
 
@@ -120,10 +120,12 @@ class MusicPlaylist(gtk.VBox):
     def add_and_play(self, *args):
         self.playing_list_item.song_view.add_songs(
                 self.current_item.song_view.add_and_play_songs, play=True)
+        self.save()
 
     def add_to_playlist(self, *args):
         self.playing_list_item.song_view.add_songs(
                 self.current_item.song_view.add_and_play_songs, play=False)
+        self.save()
 
     def load_status(self):
         obj = utils.load_db(self.status_db_file)
@@ -224,27 +226,13 @@ class MusicPlaylist(gtk.VBox):
         switch_tab(self.view_box, item.list_widget)
 
     def save(self):
-        local_lists = filter(
-                lambda item: item.list_type == MusicListItem.LOCAL_TYPE,
-                self.items)
-        if len(local_lists) > 0:
-            objs = [item.dump_list() for item in local_lists]
-            utils.save_db(objs, self.listen_db_file)
+        objs = self.playing_list_item.song_view.dump_songs()
+        utils.save_db(objs, self.listen_db_file)
 
     def load(self):
-        objs = utils.load_db(self.listen_db_file)
-        if objs:
-            items = []
-            for title, nsongs in bojs:
-                item = MusicListItem(title, list_type=MusicListItem.LOCAL_TYPE)
-                songs = []
-                for d in nsongs:
-                    s = Song()
-                    s.init_from_dict(d, cmp_key="sid")
-                    songs.append(s)
-                item.add_songs(songs)
-                items.append(item)
-            self.category_list.add_items(items, insert_pos=1)
+        songs = utils.load_db(self.listen_db_file)
+        if songs:
+            self.playing_list_item.add_songs([Song(song) for song in songs])
 
     def del_listen_list(self, item):
         def del_list():

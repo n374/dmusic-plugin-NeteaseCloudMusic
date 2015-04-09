@@ -298,6 +298,13 @@ class MusicView(TreeView):
             success_funcs=(self.render_collect_songs, (thread_id,))
             ).start()
 
+    def get_songs(self):
+        songs = []
+        self.update_item_index()
+        for song_item in self.items:
+            songs.append(song_item.get_song())
+        return songs
+
     def add_songs(self, songs, pos=None, sort=False, play=False):
         if not songs:
             return
@@ -369,20 +376,20 @@ class MusicView(TreeView):
     def dump_songs(self):
         return [ song.get_dict() for song in self.get_songs() ]
 
-    def save(self):
-        objs = self.dump_songs()
-        utils.save_db(objs, self.db_file)
+    #def save(self):
+        #objs = self.dump_songs()
+        #utils.save_db(objs, self.db_file)
 
-    def load(self):
-        objs = utils.load_db(self.db_file)
-        songs = []
-        if objs:
-            for obj in objs:
-                s = Song()
-                s.init_from_dict(obj, cmp_key="sid")
-                songs.append(s)
-        if songs:
-            self.add_songs(songs)
+    #def load(self):
+        #objs = utils.load_db(self.db_file)
+        #songs = []
+        #if objs:
+            #for obj in objs:
+                #s = Song()
+                #s.init_from_dict(obj, cmp_key="sid")
+                #songs.append(s)
+        #if songs:
+            #self.add_songs(songs)
 
     @post_gui
     def render_collect_songs(self, data, thread_id):
