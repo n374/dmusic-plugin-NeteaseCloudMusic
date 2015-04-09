@@ -51,7 +51,7 @@ class MusicView(TreeView):
 
         # view_type 为list类型
         self.connect("double-click-item", self.on_music_view_double_click)
-        #self.connect("press-return", self.on_music_view_press_return)
+        self.connect("press-return", self.on_music_view_press_return)
         #self.connect("right-press-items", self.on_music_view_right_press_items)
         #self.connect("delete-select-items",
                 #self.on_music_view_delete_select_items)
@@ -89,7 +89,12 @@ class MusicView(TreeView):
     def on_music_view_press_return(self, widget, items):
         if items:
             song = items[0].get_song()
-            self.request_song(song, play=True)
+            songs = [item.get_song() for item in items]
+            if self.view_type==self.PLAYING_LIST_TYPE:
+                self.request_song(song, play=True)
+            else:
+                self.add_and_play_songs = songs
+                event_manager.emit('add-and-play')
 
     def on_music_view_right_press_items(self, widget, x, y,
             current_item, select_items):
