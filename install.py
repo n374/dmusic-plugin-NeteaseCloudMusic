@@ -40,4 +40,4 @@ if __name__ == "__main__":
     src = os.path.join(os.path.dirname(os.path.abspath(__file__)),
             'neteasecloudmusic')
     dst = os.path.join(os.path.expanduser("~"), ".local", "share", "deepin-music-player", "plugins")
-    softlink(src, dst)
+    copytree(src, dst)
