@@ -85,6 +85,7 @@ class MusicPlaylist(gtk.VBox):
         event_manager.connect("login-success", self.load_online_lists)
         event_manager.connect("relogin", self.relogin)
         event_manager.connect("add-and-play", self.add_and_play)
+        event_manager.connect("add-to-playlist", self.add_to_playlist)
         #event_manager.connect("login-success",
                 #self.on_event_login_success)
         #event_manager.connect("collect-songs",
@@ -119,6 +120,10 @@ class MusicPlaylist(gtk.VBox):
     def add_and_play(self, *args):
         self.playing_list_item.song_view.add_songs(
                 self.current_item.song_view.add_and_play_songs, play=True)
+
+    def add_to_playlist(self, *args):
+        self.playing_list_item.song_view.add_songs(
+                self.current_item.song_view.add_and_play_songs, play=False)
 
     def load_status(self):
         obj = utils.load_db(self.status_db_file)

@@ -52,7 +52,7 @@ class MusicView(TreeView):
         # view_type 为list类型
         self.connect("double-click-item", self.on_music_view_double_click)
         self.connect("press-return", self.on_music_view_press_return)
-        #self.connect("right-press-items", self.on_music_view_right_press_items)
+        self.connect("right-press-items", self.on_music_view_right_press_items)
         #self.connect("delete-select-items",
                 #self.on_music_view_delete_select_items)
 
@@ -83,59 +83,91 @@ class MusicView(TreeView):
             if self.view_type==self.PLAYING_LIST_TYPE:
                 self.request_song(song, play=True)
             else:
-                self.add_and_play_songs = [song]
-                event_manager.emit('add-and-play')
+                self.add_play_emit([song])
 
     def on_music_view_press_return(self, widget, items):
         if items:
-            song = items[0].get_song()
-            songs = [item.get_song() for item in items]
             if self.view_type==self.PLAYING_LIST_TYPE:
+                song = items[0].get_song()
                 self.request_song(song, play=True)
             else:
-                self.add_and_play_songs = songs
-                event_manager.emit('add-and-play')
+                songs = [item.get_song() for item in items]
+                self.add_play_emit(songs)
+
+    def add_play_emit(self, songs):
+        self.add_and_play_songs = songs
+        event_manager.emit('add-and-play')
+
+    def add_to_playlist(self, songs):
+        self.add_and_play_songs = songs
+        event_manager.emit('add-to-playlist')
 
     def on_music_view_right_press_items(self, widget, x, y,
             current_item, select_items):
         if current_item and select_items:
-            if len(select_items) > 1:
-                items = [
-                        (None, _("Delete"), lambda:
-                            self.delete_items(select_items)),
-                        (None, _("Clear List"), lambda: self.clear_items())
-                        ]
-            else:
-                items = [
-                        (None, _("Play"), lambda:
-                            self.request_song(current_item.get_song())),
-                        (None, _("Delete"), lambda:
-                            self.delete_items([select_items])),
-                        (None, _("Clear List"), lambda: self.clear_items())
-                        ]
+            if self.view_type == self.PLAYING_LIST_TYPE:
+                if len(select_items) > 1:
+                    items = [
+                            (None, _("Play"), lambda: self.add_play_emit(
+                                [item.get_song() for item in select_items])),
+                            (None, _("Delete"), lambda:
+                                self.delete_items(select_items)),
+                            (None, _("Clear List"), lambda: self.clear_items())
+                            ]
+                else:
+                    items = [
+                            (None, _("Play"), lambda:
+                                self.add_play_emit([current_item.get_song()])),
+                            (None, _("Delete"), lambda:
+                                self.delete_items([select_items])),
+                            (None, _("Clear List"), lambda: self.clear_items())
+                            ]
+            if self.view_type in [self.FAVORITE_LIST_TYPE,
+                    self.COLLECTED_LIST_TYPE, self.CREATED_LIST_TYPE]:
+                if len(select_items) > 1:
+                    items = [
+                            (None, _("Add"), lambda: self.add_to_playlist(
+                                [item.get_song() for item in select_items])),
+                            (None, _("Add and Play"), lambda: self.add_play_emit(
+                                [item.get_song() for item in select_items])),
+                            #(None, _("Delete"), lambda:
+                                #self.delete_items(select_items)),
+                            #(None, _("Clear List"), lambda: self.clear_items())
+                            ]
+                else:
+                    items = [
+                            (None, _("Add"), lambda:
+                                self.add_to_playlist([current_item.get_song()])),
+                            (None, _("Add and Play"), lambda:
+                                self.add_play_emit([current_item.get_song()])),
+                            #(None, _("Delete"), lambda:
+                                #self.delete_items([select_items])),
+                            #(None, _("Clear List"), lambda: self.clear_items())
+                            ]
 
-                if self.view_type != self.PLAYLIST_TYPE and nplayer.is_login:
-                    sub_menu = self.get_add_online_list_menu(select_items)
 
-                    if sub_menu:
-                        items.insert(1, (None, "添加到歌单", sub_menu))
+                #if self.view_type != self.PLAYLIST_TYPE and nplayer.is_login:
+                    #sub_menu = self.get_add_online_list_menu(select_items)
 
-                    if self.view_type != self.COLLECT_TYPE:
-                        favourite_items = filter(lambda item: item.list_type ==
-                                self.COLLECT_TYPE, self.category_view.items)
-                        if len(favourite_items) > 0:
-                            favourite_item = favourite_items[0]
-                            songs = [item.song for item in select_items]
-                            sids = self.get_sids(favourite_items)
+                    #if sub_menu:
+                        #items.insert(1, (None, "添加到歌单", sub_menu))
 
-                            def add_to_favourite(item, songs, sids):
-                                item.add_songs(songs, pos=0)
-                                nplayer.add_favourite_song(sids)
+                    #if self.view_type != self.COLLECT_TYPE:
+                        #favourite_items = filter(lambda item: item.list_type ==
+                                #self.COLLECT_TYPE, self.category_view.items)
+                        #if len(favourite_items) > 0:
+                            #favourite_item = favourite_items[0]
+                            #songs = [item.song for item in select_items]
+                            #sids = self.get_sids(favourite_items)
 
-                            items.insert(1, (None, "喜欢", add_to_favourite,
-                                favourite_item, songs, sids))
+                            #def add_to_favourite(item, songs, sids):
+                                #item.add_songs(songs, pos=0)
+                                #nplayer.add_favourite_song(sids)
 
-                            Menu(items, True).show((int(x), int(y)))
+                            #items.insert(1, (None, "喜欢", add_to_favourite,
+                                #favourite_item, songs, sids))
+
+            Menu(items, True).show((int(x), int(y)))
 
     def get_sids(self, items):
         return ",".join([str(item.song['sid']) for item in items if
@@ -163,19 +195,19 @@ class MusicView(TreeView):
         if not items:
             return
 
-        sids = self.get_sids(items)
+        #sids = self.get_sids(items)
 
-        if self.view_type == self.COLLECT_TYPE:
-            nplayer.del_collect_song(sids)
+        #if self.view_type == self.COLLECT_TYPE:
+            #nplayer.del_collect_song(sids)
 
-        elif self.view_type == self.PLAYLIST_TYPE:
-            nplayer.del_list_song(self.list_id, sids)
+        #elif self.view_type == self.PLAYLIST_TYPE:
+            #nplayer.del_list_song(self.list_id, sids)
 
-        elif self.view_type == self.DEFAULT_TYPE:
-            self.save()
+        #elif self.view_type == self.DEFAULT_TYPE:
+            #self.save()
 
-        elif self.view_type == self.LOCAL_TYPE:
-            event_manager.emit("save-listen-lists")
+        #elif self.view_type == self.LOCAL_TYPE:
+            #event_manager.emit("save-listen-lists")
 
     def clear_items(self):
         self.clear()
