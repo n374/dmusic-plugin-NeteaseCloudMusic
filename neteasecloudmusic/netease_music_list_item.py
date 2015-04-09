@@ -46,7 +46,9 @@ class LoginBox(gtk.HBox):
         content_box.pack_start(create_bottom_align(), True, True)
         content_box.pack_start(self.username_entry, False, False)
         content_box.pack_start(self.password_entry, False, False)
-        content_box.pack_start(self.login_button, False, False)
+        login_box = gtk.HButtonBox()
+        login_box.pack_start(self.login_button, False, False, 16)
+        content_box.pack_start(login_box, False, False, 16)
         content_box.pack_start(create_upper_align(), True, True)
 
         self.pack_start(create_right_align(), True, True)
