@@ -96,11 +96,11 @@ class MusicView(TreeView):
 
     def add_play_emit(self, songs):
         self.add_and_play_songs = songs
-        event_manager.emit('add-and-play')
+        event_manager.emit('add-songs-to-playing-list-and-play')
 
     def add_to_playlist(self, songs):
         self.add_and_play_songs = songs
-        event_manager.emit('add-to-playlist')
+        event_manager.emit('add-songs-to-playing-list')
 
     def on_music_view_right_press_items(self, widget, x, y,
             current_item, select_items):
@@ -211,7 +211,7 @@ class MusicView(TreeView):
 
     def clear_items(self):
         self.clear()
-        self.emit("empty-items")
+        event_manager.emit("save-playing-list")
 
     def draw_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")

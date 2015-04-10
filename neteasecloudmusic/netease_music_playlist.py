@@ -84,8 +84,10 @@ class MusicPlaylist(gtk.VBox):
         """ Set events"""
         event_manager.connect("login-success", self.load_online_lists)
         event_manager.connect("relogin", self.relogin)
-        event_manager.connect("add-and-play", self.add_and_play)
-        event_manager.connect("add-to-playlist", self.add_to_playlist)
+        event_manager.connect("add-songs-to-playing-list-and-play",
+                self.add_songs_to_playing_list_and_play)
+        event_manager.connect("add-songs-to-playing-list",
+                self.add_songs_to_playing_list)
         #event_manager.connect("login-success",
                 #self.on_event_login_success)
         #event_manager.connect("collect-songs",
@@ -98,6 +100,8 @@ class MusicPlaylist(gtk.VBox):
                 #self.on_event_save_listen_lists)
         event_manager.connect("save-playlist-status",
                 self.save_status)
+        event_manager.connect("save-playing-list",
+                self.save)
 
         # Load playlists
         self.online_thread_id = 0
@@ -117,12 +121,12 @@ class MusicPlaylist(gtk.VBox):
     current_item = property(lambda self: self.category_list.highlight_item)
     items = property(lambda self: self.category_list.visible_items)
 
-    def add_and_play(self, *args):
+    def add_songs_to_playing_list_and_play(self, *args):
         self.playing_list_item.song_view.add_songs(
                 self.current_item.song_view.add_and_play_songs, play=True)
         self.save()
 
-    def add_to_playlist(self, *args):
+    def add_songs_to_playing_list(self, *args):
         self.playing_list_item.song_view.add_songs(
                 self.current_item.song_view.add_and_play_songs, play=False)
         self.save()
@@ -177,9 +181,23 @@ class MusicPlaylist(gtk.VBox):
                 #(None, "新建歌单", self.new_online_list),
                 (None, "重新登录", self.relogin)
                 ]
-        if not item:
-            Menu(menu_items, True).show((x, y))
-            return
+        if item:
+            self.right_clicked_item = item
+            if item.list_type == MusicListItem.CREATED_LIST_TYPE:
+                menu_items.insert(0, (None, "Add",
+                    self.add_list_to_playing_list))
+                menu_items.insert(1, (None, "Add and play",
+                    self.add_list_to_playing_list_and_play))
+            elif item.list_type == MusicListItem.COLLECTED_LIST_TYPE:
+                menu_items.insert(0, (None, "Add",
+                    self.add_list_to_playing_list))
+                menu_items.insert(1, (None, "Add and play",
+                    self.add_list_to_playing_list_and_play))
+            elif item.list_type == MusicListItem.FAVORITE_LIST_TYPE:
+                menu_items.insert(0, (None, "Add",
+                    self.add_list_to_playing_list))
+                menu_items.insert(1, (None, "Add and play",
+                    self.add_list_to_playing_list_and_play))
 
         #if item.list_type == MusicListItem.COLLECT_TYPE:
             #if nplayer.is_login:
@@ -211,6 +229,16 @@ class MusicPlaylist(gtk.VBox):
         if menu_items:
             Menu(menu_items, True).show((x, y))
 
+    def add_list_to_playing_list(self):
+        self.playing_list_item.song_view.add_songs(
+                self.right_clicked_item.song_view.get_songs(), play=False)
+        self.save()
+
+    def add_list_to_playing_list_and_play(self):
+        self.playing_list_item.song_view.add_songs(
+                self.right_clicked_item.song_view.get_songs(), play=True)
+        self.save()
+
     def relogin(self):
         nplayer.relogin()
         self.category_list.delete_items([item for item in self.items if
@@ -225,7 +253,7 @@ class MusicPlaylist(gtk.VBox):
         self.category_list.set_highlight_item(item)
         switch_tab(self.view_box, item.list_widget)
 
-    def save(self):
+    def save(self, *args):
         objs = self.playing_list_item.song_view.dump_songs()
         utils.save_db(objs, self.listen_db_file)
 
