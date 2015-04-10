@@ -181,32 +181,32 @@ class MusicPlaylist(gtk.VBox):
             Menu(menu_items, True).show((x, y))
             return
 
-        if item.list_type == MusicListItem.COLLECT_TYPE:
-            if nplayer.is_login:
-                menu_items = [
-                        (None, "刷新", item.refrush)
-                        (None, "新建歌单", self.new_online_list),
-                        ]
-            else:
-                menu_items = None
+        #if item.list_type == MusicListItem.COLLECT_TYPE:
+            #if nplayer.is_login:
+                #menu_items = [
+                        #(None, "刷新", item.refrush)
+                        #(None, "新建歌单", self.new_online_list),
+                        #]
+            #else:
+                #menu_items = None
 
-        elif item.list_type == MusicListItem.PLAYLIST_TYPE:
-            menu_items = [
-                    (None, "新建歌单", self.new_online_list),
-                    (None, "删除歌单",
-                        lambda : self.del_online_list(item)),
-                    (None, "重命名",
-                        lambda : self.rename_online_list(item)),
-                    (None, "刷新", item.refrush),
-                    ]
+        #elif item.list_type == MusicListItem.PLAYLIST_TYPE:
+            #menu_items = [
+                    #(None, "新建歌单", self.new_online_list),
+                    #(None, "删除歌单",
+                        #lambda : self.del_online_list(item)),
+                    #(None, "重命名",
+                        #lambda : self.rename_online_list(item)),
+                    #(None, "刷新", item.refrush),
+                    #]
 
-        elif item.list_type == MusicListItem.LOCAL_TYPE:
-            menu_items.extend([
-                (None, "删除列表",
-                    lambda : self.del_listen_list(item)),
-                (None, "重命名", lambda : self.rename_online_list(item,
-                    is_online=False))
-                ])
+        #elif item.list_type == MusicListItem.LOCAL_TYPE:
+            #menu_items.extend([
+                #(None, "删除列表",
+                    #lambda : self.del_listen_list(item)),
+                #(None, "重命名", lambda : self.rename_online_list(item,
+                    #is_online=False))
+                #])
 
         if menu_items:
             Menu(menu_items, True).show((x, y))
