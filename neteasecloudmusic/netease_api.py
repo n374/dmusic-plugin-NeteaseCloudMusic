@@ -60,13 +60,23 @@ class NetEase(object):
         self.cookies = self.load_cookie()
 
     def login_and_get_cookie(self, username, password):
+        pattern = re.compile(r'^0\d{2,3}\d{7,8}$|^1[34578]\d{9}$')
+        if (pattern.match(username)):
+            print 'cellphone login'
+            action = 'https://music.163.com/api/login/cellphone'
+            data = {
+                'phone': username,
+                'password': hashlib.md5(str(password)).hexdigest(),
+                'rememberLogin': 'true'
+            }
+        else:
+            action = 'http://music.163.com/api/login/'
+            data = {
+                'username': username,
+                'password': hashlib.md5(str(password)).hexdigest(),
+                'rememberLogin': 'true'
+            }
         s = requests.Session()
-        action = 'http://music.163.com/api/login/'
-        data = {
-            'username': username,
-            'password': hashlib.md5(str(password)).hexdigest(),
-            'rememberLogin': 'true'
-        }
         try:
             connection = s.post(
                 action,
@@ -81,6 +91,7 @@ class NetEase(object):
             self.cookies = s.cookies
             return s.cookies
         except:
+            print 'login failed'
             return None
 
     def get_uid(self):
