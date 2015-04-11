@@ -158,8 +158,13 @@ class NetEase(object):
     def personal_fm(self):
         action = 'http://music.163.com/api/radio/get'
         try:
-            data = self.httpRequest('GET', action)
-            return data['data']
+            tracks = self.httpRequest('GET', action)['data']
+            for item in tracks:
+                item['sid'] = item['id']
+                item['title'] = item['name']
+                item['uri'] = item['mp3Url']
+                item['#duration'] = item['duration']
+            return tracks
         except:
             return None
 
