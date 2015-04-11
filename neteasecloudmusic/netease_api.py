@@ -155,6 +155,14 @@ class NetEase(object):
         else:
             return None
 
+    def personal_fm(self):
+        action = 'http://music.163.com/api/radio/get'
+        try:
+            data = self.httpRequest('GET', action)
+            return data['data']
+        except:
+            return None
+
     # 搜索单曲(1)，歌手(100)，专辑(10)，歌单(1000)，用户(1002) *(type)*
     def search(self, s, stype=1, offset=0, total='true', limit=60):
         action = 'http://music.163.com/api/search/get/web'
