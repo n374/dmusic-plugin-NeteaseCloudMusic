@@ -22,6 +22,7 @@ from player import Player
 from netease_events import event_manager
 from netease_music_list_item import MusicListItem, nplayer
 from netease_music_view import CategoryView
+from netease_music_view import MusicView
 
 def login_required(func):
     """ Decorator. If not login, emit 'login-dialog-run', else run func() """
@@ -39,7 +40,6 @@ class MusicPlaylist(gtk.VBox):
             #"empty-items" :
                 #(gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
             #}
-
     def __init__(self):
         super(MusicPlaylist, self).__init__()
 
@@ -88,19 +88,7 @@ class MusicPlaylist(gtk.VBox):
                 self.add_songs_to_playing_list_and_play)
         event_manager.connect("add-songs-to-playing-list",
                 self.add_songs_to_playing_list)
-        #event_manager.connect("login-success",
-                #self.on_event_login_success)
-        #event_manager.connect("collect-songs",
-                #self.on_event_collect_songs)
-        #event_manager.connect("add-songs",
-                #self.on_event_add_songs)
-        #event_manager.connect("play-songs",
-                #self.on_event_play_songs)
-        #event_manager.connect("save-listen-lists",
-                #self.on_event_save_listen_lists)
-        event_manager.connect("save-playlist-status",
-                self.save_status)
-        event_manager.connect("save-playing-list",
+        event_manager.connect("save-playing-list-status",
                 self.save)
 
         # Load playlists
@@ -113,7 +101,6 @@ class MusicPlaylist(gtk.VBox):
             self.login_item = MusicListItem("登录", is_login_item=True)
             self.category_list.add_items([self.login_item])
         self.load()
-        self.load_status()
 
         self.add(main_paned)
 
@@ -131,35 +118,9 @@ class MusicPlaylist(gtk.VBox):
                 self.current_item.song_view.add_and_play_songs, play=False)
         self.save()
 
-    def load_status(self):
-        obj = utils.load_db(self.status_db_file)
-        if obj:
-            index, d = obj
-            song = Song()
-            song.init_from_dict(d, cmp_key="sid")
-        else:
-            index = 0
-            song = None
-
-        self.playlist_index = index
-        self.last_song = song
-
-    def save_status(self, *args):
-        index = 0
-        player_source = Player.get_source()
-        for i, item in enumerate(self.category_list.get_items()):
-            if item.song_view == player_source:
-                index = i
-
-        try:
-            song = self.current_item.current_song
-            utils.save_db((index, song.get_dict()), self.status_db_file)
-        except:
-            pass
-
     def restore_status(self):
         try:
-            target_item = self.items[self.playlist_index]
+            target_item = self.playing_list_item
         except:
             target_item = None
 
@@ -167,6 +128,7 @@ class MusicPlaylist(gtk.VBox):
             self.switch_view(target_item)
             if is_network_connected():
                 self.current_item.play_song(self.last_song, play=True)
+
     def draw_category_list_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutLeft")
 
@@ -183,7 +145,10 @@ class MusicPlaylist(gtk.VBox):
                 ]
         if item:
             self.right_clicked_item = item
-            if item.list_type == MusicListItem.CREATED_LIST_TYPE:
+            if item.list_type == MusicListItem.PLAYING_LIST_TYPE:
+                sub_menu = self.get_playback_mode_menu()
+                menu_items.insert(0, (None, 'Playback mode', sub_menu))
+            elif item.list_type == MusicListItem.CREATED_LIST_TYPE:
                 menu_items.insert(0, (None, "Add",
                     self.add_list_to_playing_list))
                 menu_items.insert(1, (None, "Add and play",
@@ -199,35 +164,28 @@ class MusicPlaylist(gtk.VBox):
                 menu_items.insert(1, (None, "Add and play",
                     self.add_list_to_playing_list_and_play))
 
-        #if item.list_type == MusicListItem.COLLECT_TYPE:
-            #if nplayer.is_login:
-                #menu_items = [
-                        #(None, "刷新", item.refrush)
-                        #(None, "新建歌单", self.new_online_list),
-                        #]
-            #else:
-                #menu_items = None
-
-        #elif item.list_type == MusicListItem.PLAYLIST_TYPE:
-            #menu_items = [
-                    #(None, "新建歌单", self.new_online_list),
-                    #(None, "删除歌单",
-                        #lambda : self.del_online_list(item)),
-                    #(None, "重命名",
-                        #lambda : self.rename_online_list(item)),
-                    #(None, "刷新", item.refrush),
-                    #]
-
-        #elif item.list_type == MusicListItem.LOCAL_TYPE:
-            #menu_items.extend([
-                #(None, "删除列表",
-                    #lambda : self.del_listen_list(item)),
-                #(None, "重命名", lambda : self.rename_online_list(item,
-                    #is_online=False))
-                #])
-
         if menu_items:
             Menu(menu_items, True).show((x, y))
+
+    def get_playback_mode_menu(self):
+        strings = ['List repeat', 'Single repeat', 'Order play', 'Randomize']
+        mode = self.playing_list_item.song_view.playback_mode
+        strings = ['   '+string if i!=mode-1 else '✓'+string for i, string in
+                enumerate(strings)]
+        menu = Menu([(None, strings[0],
+            self.playing_list_item.song_view.set_playback_mode,
+            MusicView.LIST_REPEAT),
+            (None, strings[1],
+                self.playing_list_item.song_view.set_playback_mode,
+                MusicView.SINGLE_REPEAT),
+            (None, strings[2],
+                self.playing_list_item.song_view.set_playback_mode,
+                MusicView.ORDER_PLAY),
+            (None, strings[3],
+                self.playing_list_item.song_view.set_playback_mode,
+                MusicView.RANDOMIZE)])
+
+        return menu
 
     def add_list_to_playing_list(self):
         self.playing_list_item.song_view.add_songs(
@@ -254,13 +212,29 @@ class MusicPlaylist(gtk.VBox):
         switch_tab(self.view_box, item.list_widget)
 
     def save(self, *args):
-        objs = self.playing_list_item.song_view.dump_songs()
-        utils.save_db(objs, self.listen_db_file)
+        songs = self.playing_list_item.song_view.dump_songs()
+        song = self.current_item.current_song
+        if song:
+            utils.save_db((song.get_dict(),
+                songs, self.playing_list_item.song_view.playback_mode),
+                self.listen_db_file)
+        else:
+            utils.save_db((None, songs,
+                self.playing_list_item.song_view.playback_mode),
+                self.listen_db_file)
 
     def load(self):
-        songs = utils.load_db(self.listen_db_file)
-        if songs:
+        objs = utils.load_db(self.listen_db_file)
+        if objs:
+            (self.last_song, songs,
+                    self.playing_list_item.song_view.playback_mode) = objs
+            if self.last_song:
+                self.last_song = Song(self.last_song)
             self.playing_list_item.add_songs([Song(song) for song in songs])
+        else:
+            self.last_song = None
+            self.playing_list_item.song_view.playback_mode = self.LIST_REPEAT
+
 
     def del_listen_list(self, item):
         def del_list():

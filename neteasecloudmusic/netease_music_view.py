@@ -4,6 +4,7 @@
 import gobject
 import copy
 import time
+import random
 
 from dtk.ui.treeview import TreeView
 from dtk.ui.threads import post_gui
@@ -37,6 +38,11 @@ class MusicView(TreeView):
     CREATED_LIST_TYPE = 3
     COLLECTED_LIST_TYPE = 4
     LOGIN_LIST_TYPE = 5
+
+    LIST_REPEAT = 1
+    SINGLE_REPEAT = 2
+    ORDER_PLAY = 3
+    RANDOMIZE = 4
 
     __gsignals__ = {
             "begin-add-items" :
@@ -130,9 +136,6 @@ class MusicView(TreeView):
                                 [item.get_song() for item in select_items])),
                             (None, _("Add and Play"), lambda: self.add_play_emit(
                                 [item.get_song() for item in select_items])),
-                            #(None, _("Delete"), lambda:
-                                #self.delete_items(select_items)),
-                            #(None, _("Clear List"), lambda: self.clear_items())
                             ]
                 else:
                     items = [
@@ -140,32 +143,7 @@ class MusicView(TreeView):
                                 self.add_to_playlist([current_item.get_song()])),
                             (None, _("Add and Play"), lambda:
                                 self.add_play_emit([current_item.get_song()])),
-                            #(None, _("Delete"), lambda:
-                                #self.delete_items([select_items])),
-                            #(None, _("Clear List"), lambda: self.clear_items())
                             ]
-
-
-                #if self.view_type != self.PLAYLIST_TYPE and nplayer.is_login:
-                    #sub_menu = self.get_add_online_list_menu(select_items)
-
-                    #if sub_menu:
-                        #items.insert(1, (None, "添加到歌单", sub_menu))
-
-                    #if self.view_type != self.COLLECT_TYPE:
-                        #favourite_items = filter(lambda item: item.list_type ==
-                                #self.COLLECT_TYPE, self.category_view.items)
-                        #if len(favourite_items) > 0:
-                            #favourite_item = favourite_items[0]
-                            #songs = [item.song for item in select_items]
-                            #sids = self.get_sids(favourite_items)
-
-                            #def add_to_favourite(item, songs, sids):
-                                #item.add_songs(songs, pos=0)
-                                #nplayer.add_favourite_song(sids)
-
-                            #items.insert(1, (None, "喜欢", add_to_favourite,
-                                #favourite_item, songs, sids))
 
             Menu(items, True).show((int(x), int(y)))
 
@@ -195,23 +173,9 @@ class MusicView(TreeView):
         if not items:
             return
 
-        #sids = self.get_sids(items)
-
-        #if self.view_type == self.COLLECT_TYPE:
-            #nplayer.del_collect_song(sids)
-
-        #elif self.view_type == self.PLAYLIST_TYPE:
-            #nplayer.del_list_song(self.list_id, sids)
-
-        #elif self.view_type == self.DEFAULT_TYPE:
-            #self.save()
-
-        #elif self.view_type == self.LOCAL_TYPE:
-            #event_manager.emit("save-listen-lists")
-
     def clear_items(self):
         self.clear()
-        event_manager.emit("save-playing-list")
+        event_manager.emit("save-playing-list-status")
 
     def draw_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")
@@ -267,7 +231,7 @@ class MusicView(TreeView):
             # set self as current global playlist
             self.set_current_source()
 
-            event_manager.emit("save-playlist-status")
+            event_manager.emit("save-playing-list-status")
         return song
 
     @post_gui
@@ -317,12 +281,6 @@ class MusicView(TreeView):
                 self.emit_add_signal()
             self.add_items(song_items, pos, False)
 
-             #save songs
-            #if self.view_type == self.DEFAULT_TYPE:
-                #self.save()
-            #if self.view_type == self.LOCAL_TYPE:
-                #event_manager.emit("save-listen-lists")
-
         if len(songs) >= 1 and play:
             song = songs[0]
             self.request_song(song, play=True)
@@ -339,6 +297,10 @@ class MusicView(TreeView):
         if song in self.items:
             self.items[self.items.index(SongItem(song))].update(song, True)
 
+    def set_playback_mode(self, playback_mode):
+        self.playback_mode = playback_mode
+        event_manager.emit('save-playing-list-status')
+
     def get_next_song(self, maunal=False):
         if len(self.items) <= 0:
             return
@@ -346,9 +308,20 @@ class MusicView(TreeView):
         if self.highlight_item:
             if self.highlight_item in self.items:
                 current_index = self.items.index(self.highlight_item)
-                next_index = current_index + 1
-                if next_index > len(self.items) - 1:
-                    next_index = 0
+                if self.playback_mode == self.LIST_REPEAT:
+                    next_index = current_index + 1
+                    if next_index > len(self.items) - 1:
+                        next_index = 0
+                elif self.playback_mode == self.SINGLE_REPEAT:
+                    next_index = current_index
+                elif self.playback_mode == self.ORDER_PLAY:
+                    next_index = current_index + 1
+                    if next_index > len(self.items) - 1:
+                        return
+                elif self.playback_mode == self.RANDOMIZE:
+                    next_index = random.choice(
+                            range(0, current_index)
+                            +range(current_index+1, len(self.items)))
                 highlight_item = self.items[next_index]
             else:
                 highlight_item = self.items[0]
@@ -361,13 +334,26 @@ class MusicView(TreeView):
         if len(self.items) <= 0:
             return
 
-        if self.highlight_item != None:
+        if self.highlight_item:
             if self.highlight_item in self.items:
                 current_index = self.items.index(self.highlight_item)
-                prev_index = current_index - 1
-                if prev_index < 0:
-                    prev_index = len(self.items) - 1
-                highlight_item = self.items[prev_index]
+                if self.playback_mode == self.LIST_REPEAT:
+                    next_index = current_index - 1
+                    if next_index > len(self.items) - 1:
+                        next_index = 0
+                elif self.playback_mode == self.SINGLE_REPEAT:
+                    next_index = current_index
+                elif self.playback_mode == self.ORDER_PLAY:
+                    next_index = current_index - 1
+                    if next_index < 0:
+                        return
+                elif self.playback_mode == self.RANDOMIZE:
+                    next_index = random.choice(
+                            range(0, current_index)
+                            +range(current_index+1, len(self.items)))
+                highlight_item = self.items[next_index]
+            else:
+                highlight_item = self.items[0]
         else:
             highlight_item = self.items[0]
 
@@ -375,21 +361,6 @@ class MusicView(TreeView):
 
     def dump_songs(self):
         return [ song.get_dict() for song in self.get_songs() ]
-
-    #def save(self):
-        #objs = self.dump_songs()
-        #utils.save_db(objs, self.db_file)
-
-    #def load(self):
-        #objs = utils.load_db(self.db_file)
-        #songs = []
-        #if objs:
-            #for obj in objs:
-                #s = Song()
-                #s.init_from_dict(obj, cmp_key="sid")
-                #songs.append(s)
-        #if songs:
-            #self.add_songs(songs)
 
     @post_gui
     def render_collect_songs(self, data, thread_id):
