@@ -192,6 +192,7 @@ class MusicView(TreeView):
         self.emit("begin-add-items")
 
     def request_song(self, song, play=True):
+        self.set_highlight_song(song)
         if self.adjust_uri_expired(song):
             self.request_thread_id += 1
             thread_id = copy.deepcopy(self.request_thread_id)
@@ -201,7 +202,6 @@ class MusicView(TreeView):
                 ).start()
         else:
             self.play_song(song, play=True)
-        self.pre_fetch_fm_songs()
 
     def pre_fetch_fm_songs(self):
         for i in [item.get_song()['title'] for item in self.visible_items]:
@@ -252,6 +252,7 @@ class MusicView(TreeView):
             self.set_current_source()
 
             event_manager.emit("save-playing-list-status")
+        self.pre_fetch_fm_songs()
         return song
 
     @post_gui
@@ -372,7 +373,6 @@ class MusicView(TreeView):
             print 'not self.highlight_item'
             highlight_item = self.items[0]
 
-        self.set_highlight_item(highlight_item)
         self.request_song(highlight_item.get_song(), play=True)
 
     def get_previous_song(self):
@@ -420,7 +420,6 @@ class MusicView(TreeView):
         else:
             highlight_item = self.items[0]
 
-        self.set_highlight_item(highlight_item)
         self.request_song(highlight_item.get_song(), play=True)
 
     def dump_songs(self):
