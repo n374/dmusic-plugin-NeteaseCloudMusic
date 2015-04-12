@@ -201,8 +201,9 @@ class MusicView(TreeView):
                 ).start()
         else:
             self.play_song(song, play=True)
+        self.pre_fetch_fm_songs()
 
-    def pre_fecth_fm_songs(self):
+    def pre_fetch_fm_songs(self):
         for i in [item.get_song()['title'] for item in self.visible_items]:
             print '*', i
         if self.highlight_item and self.highlight_item in self.items:
@@ -373,7 +374,6 @@ class MusicView(TreeView):
 
         self.set_highlight_item(highlight_item)
         self.request_song(highlight_item.get_song(), play=True)
-        self.pre_fecth_fm_songs()
 
     def get_previous_song(self):
         if len(self.items) <= 0:

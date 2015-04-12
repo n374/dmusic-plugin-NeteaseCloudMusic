@@ -88,7 +88,7 @@ class MusicPlaylist(gtk.VBox):
             self.load_online_lists('')
         else:
             self.login_item = MusicListItem("登录",
-                    MusicListItem.LOGIN_LIST_TYPE, is_login_item=True)
+                    MusicListItem.LOGIN_LIST_TYPE)
             self.category_list.add_items([self.login_item])
         self.load()
 
@@ -223,7 +223,7 @@ class MusicPlaylist(gtk.VBox):
             self.playing_list_item.add_songs([Song(song) for song in songs])
         else:
             self.last_song = None
-            self.playing_list_item.song_view.playback_mode = self.LIST_REPEAT
+            self.playing_list_item.song_view.playback_mode = MusicView.LIST_REPEAT
 
 
     def del_listen_list(self, item):

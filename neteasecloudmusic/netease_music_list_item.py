@@ -82,7 +82,7 @@ class MusicListItem(TreeItem):
         self.padding_x = 8
 
         if list_type and list_type in [self.PLAYING_LIST_TYPE,
-                self.PERSONAL_FM_ITEM]:
+                self.PERSONAL_FM_ITEM, self.LOGIN_LIST_TYPE]:
             self.title = list_data
         else:
             self.title = list_data.get("name", "")
