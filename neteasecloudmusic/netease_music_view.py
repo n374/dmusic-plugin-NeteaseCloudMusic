@@ -38,6 +38,7 @@ class MusicView(TreeView):
     CREATED_LIST_TYPE = 3
     COLLECTED_LIST_TYPE = 4
     LOGIN_LIST_TYPE = 5
+    PERSONAL_FM_ITEM = 6
 
     LIST_REPEAT = 1
     SINGLE_REPEAT = 2
@@ -86,8 +87,9 @@ class MusicView(TreeView):
     def on_music_view_double_click(self, widget, item, column, x, y):
         if item:
             song = item.get_song()
-            if self.view_type==self.PLAYING_LIST_TYPE:
+            if self.view_type in [self.PLAYING_LIST_TYPE, self.PERSONAL_FM_ITEM]:
                 self.request_song(song, play=True)
+                self.set_current_source()
             else:
                 self.add_play_emit([song])
 
@@ -128,6 +130,7 @@ class MusicView(TreeView):
                                 self.delete_items([select_items])),
                             (None, _("Clear List"), lambda: self.clear_items())
                             ]
+                Menu(items, True).show((int(x), int(y)))
             if self.view_type in [self.FAVORITE_LIST_TYPE,
                     self.COLLECTED_LIST_TYPE, self.CREATED_LIST_TYPE]:
                 if len(select_items) > 1:
@@ -145,7 +148,7 @@ class MusicView(TreeView):
                                 self.add_play_emit([current_item.get_song()])),
                             ]
 
-            Menu(items, True).show((int(x), int(y)))
+                Menu(items, True).show((int(x), int(y)))
 
     def get_sids(self, items):
         return ",".join([str(item.song['sid']) for item in items if
@@ -198,6 +201,22 @@ class MusicView(TreeView):
                 ).start()
         else:
             self.play_song(song, play=True)
+
+    def pre_fecth_fm_songs(self):
+        for i in [item.get_song()['title'] for item in self.visible_items]:
+            print '*', i
+        if self.highlight_item and self.highlight_item in self.items:
+            current_index = self.items.index(self.highlight_item)
+            print 'current_index', current_index
+            if current_index >= len(self.items)-2:
+                songs = nplayer.personal_fm()
+                self.add_songs(songs)
+                #self.onlinelist_thread_id += 1
+                #thread_id = copy.deepcopy(self.onlinelist_thread_id)
+                #utils.ThreadFetch(
+                        #fetch_funcs=(nplayer.personal_fm, ()),
+                        #success_funcs=(self.add_songs, (thread_id,))
+                        #).start()
 
     def adjust_uri_expired(self, song):
         expire_time = song.get("uri_expire_time", None)
@@ -273,8 +292,12 @@ class MusicView(TreeView):
         if not songs:
             return
 
-        song_items = [ SongItem(song) for song in songs if song not in
-                self.get_playlist_songs() ]
+        try:
+            song_items = [ SongItem(song) for song in songs if song not in
+                    self.get_playlist_songs() ]
+        except:
+            song_items = [ SongItem(Song(song)) for song in songs if song not in
+                    self.get_playlist_songs() ]
 
         if song_items:
             if not self.items:
@@ -305,6 +328,10 @@ class MusicView(TreeView):
         if len(self.items) <= 0:
             return
 
+        if self.view_type == self.PERSONAL_FM_ITEM:
+            self.get_next_fm()
+            return
+
         if self.highlight_item:
             if self.highlight_item in self.items:
                 current_index = self.items.index(self.highlight_item)
@@ -323,6 +350,56 @@ class MusicView(TreeView):
                             range(0, current_index)
                             +range(current_index+1, len(self.items)))
                 highlight_item = self.items[next_index]
+            else:
+                highlight_item = self.items[0]
+        else:
+            highlight_item = self.items[0]
+        self.request_song(highlight_item.get_song(), play=True)
+
+    def get_next_fm(self):
+        if self.highlight_item:
+            if self.highlight_item in self.items:
+                current_index = self.items.index(self.highlight_item)
+                next_index = current_index + 1
+                if next_index > len(self.items) -1:
+                    return
+                highlight_item = self.items[next_index]
+            else:
+                print 'self.highlight_item not in self.items'
+                highlight_item = self.items[0]
+        else:
+            print 'not self.highlight_item'
+            highlight_item = self.items[0]
+
+        self.set_highlight_item(highlight_item)
+        self.request_song(highlight_item.get_song(), play=True)
+        self.pre_fecth_fm_songs()
+
+    def get_previous_song(self):
+        if len(self.items) <= 0:
+            return
+
+        if self.view_type == self.PERSONAL_FM_ITEM:
+            self.get_pervious_fm()
+
+        if self.highlight_item:
+            if self.highlight_item in self.items:
+                current_index = self.items.index(self.highlight_item)
+                if self.playback_mode == self.LIST_REPEAT:
+                    pervious_song = current_index - 1
+                    if pervious_song > len(self.items) - 1:
+                        pervious_song = 0
+                elif self.playback_mode == self.SINGLE_REPEAT:
+                    pervious_song = current_index
+                elif self.playback_mode == self.ORDER_PLAY:
+                    pervious_song = current_index - 1
+                    if pervious_song < 0:
+                        return
+                elif self.playback_mode == self.RANDOMIZE:
+                    pervious_song = random.choice(
+                            range(0, current_index)
+                            +range(current_index+1, len(self.items)))
+                highlight_item = self.items[pervious_song]
             else:
                 highlight_item = self.items[0]
         else:
@@ -330,33 +407,20 @@ class MusicView(TreeView):
 
         self.request_song(highlight_item.get_song(), play=True)
 
-    def get_previous_song(self):
-        if len(self.items) <= 0:
-            return
-
+    def get_pervious_fm(self):
         if self.highlight_item:
             if self.highlight_item in self.items:
                 current_index = self.items.index(self.highlight_item)
-                if self.playback_mode == self.LIST_REPEAT:
-                    next_index = current_index - 1
-                    if next_index > len(self.items) - 1:
-                        next_index = 0
-                elif self.playback_mode == self.SINGLE_REPEAT:
-                    next_index = current_index
-                elif self.playback_mode == self.ORDER_PLAY:
-                    next_index = current_index - 1
-                    if next_index < 0:
-                        return
-                elif self.playback_mode == self.RANDOMIZE:
-                    next_index = random.choice(
-                            range(0, current_index)
-                            +range(current_index+1, len(self.items)))
+                next_index = current_index - 1
+                if next_index < 0:
+                    return
                 highlight_item = self.items[next_index]
             else:
                 highlight_item = self.items[0]
         else:
             highlight_item = self.items[0]
 
+        self.set_highlight_item(highlight_item)
         self.request_song(highlight_item.get_song(), play=True)
 
     def dump_songs(self):

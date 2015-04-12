@@ -69,8 +69,10 @@ class MusicListItem(TreeItem):
     CREATED_LIST_TYPE = 3
     COLLECTED_LIST_TYPE = 4
     LOGIN_LIST_TYPE = 5
+    PERSONAL_FM_ITEM = 6
 
-    def __init__(self, list_data, is_online_list=False, is_login_item=False):
+    def __init__(self, list_data, list_type, is_online_list=False,
+            has_separator=True):
         TreeItem.__init__(self)
 
         self.column_index = 0
@@ -79,16 +81,14 @@ class MusicListItem(TreeItem):
         self.padding_y = 0
         self.padding_x = 8
 
-        if isinstance(list_data, basestring):
+        if list_type and list_type in [self.PLAYING_LIST_TYPE,
+                self.PERSONAL_FM_ITEM]:
             self.title = list_data
-            self.data = dict()
-            self.list_type = self.PLAYING_LIST_TYPE
         else:
             self.title = list_data.get("name", "")
-            self.data = list_data
-            #self.list_id = list_data.get('id', '')
-
         self.data = list_data
+        self.list_type= list_type
+
         if is_online_list:
             if self.data['specialType'] == 5:
                 self.list_type = self.FAVORITE_LIST_TYPE
@@ -96,11 +96,8 @@ class MusicListItem(TreeItem):
                 self.list_type = self.COLLECTED_LIST_TYPE
             else:
                 self.list_type = self.CREATED_LIST_TYPE
-        else:
-            self.list_type = self.PLAYING_LIST_TYPE
-        if is_login_item:
-            self.list_type = self.LOGIN_LIST_TYPE
-        self.has_separator = 1
+
+        self.has_separator = has_separator
         self.separator_height = 4
         self.item_width = CATEGROYLIST_WIDTH
         self.item_height = 26 + self.separator_height if self.has_separator else 26
@@ -109,13 +106,11 @@ class MusicListItem(TreeItem):
         self.song_view = MusicView(data=self.data, view_type=self.list_type)
         self.song_view.set_size_request(PLAYLIST_WIDTH, -1)
 
-        if is_login_item:
+        if self.list_type == self.LOGIN_LIST_TYPE:
             self.login_box = LoginBox(lambda w:
                     event_manager.emit("login"))
 
             event_manager.connect("login", self.login)
-
-        #event_manager.connect("login-success", self.on_event_login_success)
 
         self.main_box = gtk.VBox()
 
@@ -133,6 +128,10 @@ class MusicListItem(TreeItem):
         if self.list_type == self.PLAYING_LIST_TYPE:
             normal_image_name = "playing_list.png"
             press_image_name = "playing_list_press.png"
+
+        elif self.list_type == self.PERSONAL_FM_ITEM:
+            normal_image_name = "personal_fm.png"
+            press_image_name = "personal_fm_press.png"
 
         elif self.list_type == self.FAVORITE_LIST_TYPE:
             normal_image_name = "favorite_list.png"

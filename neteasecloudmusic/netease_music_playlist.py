@@ -34,12 +34,6 @@ def login_required(func):
     return inner
 
 class MusicPlaylist(gtk.VBox):
-    #__gsignals__ = {
-            #"login-success" :
-                #(gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
-            #"empty-items" :
-                #(gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
-            #}
     def __init__(self):
         super(MusicPlaylist, self).__init__()
 
@@ -48,13 +42,8 @@ class MusicPlaylist(gtk.VBox):
         self.status_db_file = get_cache_file("neteasecloudmusic/status.db")
 
         # Set default & collect list item
-        self.playing_list_item = MusicListItem("播放列表")
-        #self.created_list_item = MusicListItem("我的歌单",
-                #list_type=MusicListItem.CREATED_LIST_TYPE,
-                #has_separator=True)
-        #self.collected_list_item = MusicListItem("收藏歌单",
-                #list_type=MusicListItem.COLLECTED_LIST_TYPE,
-                #has_separator=True)
+        self.playing_list_item = MusicListItem("播放列表",
+                MusicListItem.PLAYING_LIST_TYPE)
 
         # Set category list and connect click/right click
         self.category_list = CategoryView(enable_drag_drop=False,
@@ -98,7 +87,8 @@ class MusicPlaylist(gtk.VBox):
         if nplayer.is_login:
             self.load_online_lists('')
         else:
-            self.login_item = MusicListItem("登录", is_login_item=True)
+            self.login_item = MusicListItem("登录",
+                    MusicListItem.LOGIN_LIST_TYPE, is_login_item=True)
             self.category_list.add_items([self.login_item])
         self.load()
 
@@ -201,7 +191,7 @@ class MusicPlaylist(gtk.VBox):
         nplayer.relogin()
         self.category_list.delete_items([item for item in self.items if
             item.list_type!=MusicListItem.PLAYING_LIST_TYPE])
-        self.login_item = MusicListItem("登录", is_login_item=True)
+        self.login_item = MusicListItem("登录", MusicListItem.LOGIN_LIST_TYPE)
         self.category_list.add_items([self.login_item])
         self.switch_view(self.login_item)
 
@@ -272,12 +262,12 @@ class MusicPlaylist(gtk.VBox):
     def on_event_save_listen_lists(self, obj, data):
         self.save()
 
-    def add_play_songs(self, data, play=False):
-        if self.current_item.list_type not in (MusicListItem.DEFAULT_TYPE,
-                MusicListItem.LOCAL_TYPE):
-            self.switch_view(self.default_list_item)
+    #def add_play_songs(self, data, play=False):
+        #if self.current_item.list_type not in (MusicListItem.DEFAULT_TYPE,
+                #MusicListItem.LOCAL_TYPE):
+            #self.switch_view(self.default_list_item)
 
-        self.current_item.add_songs(data, play=play)
+        #self.current_item.add_songs(data, play=play)
 
     def load_online_lists(self, args, *kwargs):
         try:
@@ -285,8 +275,16 @@ class MusicPlaylist(gtk.VBox):
                 item.list_type!=MusicListItem.PLAYING_LIST_TYPE])
         except:
             pass
+        self.personal_fm_item = MusicListItem("私人FM",
+                MusicListItem.PERSONAL_FM_ITEM)
+        self.category_list.add_items([self.personal_fm_item])
         self.online_thread_id += 1
         thread_id = copy.deepcopy(self.online_thread_id)
+
+        # Get personal FM songs
+        while len(self.personal_fm_item.song_view.items) < 2:
+            songs = nplayer.personal_fm()
+            self.personal_fm_item.add_songs([Song(song) for song in songs])
 
         utils.ThreadFetch(
                 fetch_funcs=(nplayer.user_playlist, (nplayer.uid,)),
@@ -299,7 +297,7 @@ class MusicPlaylist(gtk.VBox):
             return
 
         if len(playlists) > 0:
-            items = [MusicListItem(data, True) for data in playlists]
+            items = [MusicListItem(data, None, True) for data in playlists]
             self.category_list.add_items(items)
 
     def del_online_list(self, item):
@@ -329,7 +327,7 @@ class MusicPlaylist(gtk.VBox):
     def render_new_online_list(self, data, thread_id):
         if self.new_list_thread_id != thread_id:
             return
-        item = MusicListItem(data)
+        item = MusicListItem(data, None, True)
         self.category_list.add_items([item])
 
     def rename_online_list(self, item, is_online=True):
