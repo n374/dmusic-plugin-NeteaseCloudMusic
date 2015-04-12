@@ -114,6 +114,3 @@ class PlayerInterface(object):
 
 neteasecloud_music_player = MusicPlayer()
 player_interface = PlayerInterface()
-
-
-

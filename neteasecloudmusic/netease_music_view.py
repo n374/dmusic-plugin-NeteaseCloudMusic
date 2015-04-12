@@ -178,7 +178,7 @@ class MusicView(TreeView):
 
     def clear_items(self):
         self.clear()
-        event_manager.emit("save-playing-list-status")
+        event_manager.emit("save-playing-status")
 
     def draw_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")
@@ -204,11 +204,8 @@ class MusicView(TreeView):
             self.play_song(song, play=True)
 
     def pre_fetch_fm_songs(self):
-        for i in [item.get_song()['title'] for item in self.visible_items]:
-            print '*', i
         if self.highlight_item and self.highlight_item in self.items:
             current_index = self.items.index(self.highlight_item)
-            print 'current_index', current_index
             if current_index >= len(self.items)-2:
                 songs = nplayer.personal_fm()
                 self.add_songs(songs)
@@ -251,7 +248,7 @@ class MusicView(TreeView):
             # set self as current global playlist
             self.set_current_source()
 
-            event_manager.emit("save-playing-list-status")
+            event_manager.emit("save-playing-status")
         self.pre_fetch_fm_songs()
         return song
 
@@ -324,7 +321,7 @@ class MusicView(TreeView):
 
     def set_playback_mode(self, playback_mode):
         self.playback_mode = playback_mode
-        event_manager.emit('save-playing-list-status')
+        event_manager.emit('save-playing-status')
 
     def get_next_song(self, maunal=False):
         if len(self.items) <= 0:
@@ -367,10 +364,8 @@ class MusicView(TreeView):
                     return
                 highlight_item = self.items[next_index]
             else:
-                print 'self.highlight_item not in self.items'
                 highlight_item = self.items[0]
         else:
-            print 'not self.highlight_item'
             highlight_item = self.items[0]
 
         self.request_song(highlight_item.get_song(), play=True)

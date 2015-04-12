@@ -44,6 +44,8 @@ class MusicPlaylist(gtk.VBox):
         # Set default & collect list item
         self.playing_list_item = MusicListItem("播放列表",
                 MusicListItem.PLAYING_LIST_TYPE)
+        self.personal_fm_item = MusicListItem("私人FM",
+                MusicListItem.PERSONAL_FM_ITEM)
 
         # Set category list and connect click/right click
         self.category_list = CategoryView(enable_drag_drop=False,
@@ -77,12 +79,14 @@ class MusicPlaylist(gtk.VBox):
                 self.add_songs_to_playing_list_and_play)
         event_manager.connect("add-songs-to-playing-list",
                 self.add_songs_to_playing_list)
-        event_manager.connect("save-playing-list-status",
+        event_manager.connect("save-playing-status",
                 self.save)
 
         # Load playlists
         self.online_thread_id = 0
         self.new_list_thread_id = 0
+
+        self.load()
 
         if nplayer.is_login:
             self.load_online_lists('')
@@ -90,7 +94,6 @@ class MusicPlaylist(gtk.VBox):
             self.login_item = MusicListItem("登录",
                     MusicListItem.LOGIN_LIST_TYPE)
             self.category_list.add_items([self.login_item])
-        self.load()
 
         self.add(main_paned)
 
@@ -110,7 +113,7 @@ class MusicPlaylist(gtk.VBox):
 
     def restore_status(self):
         try:
-            target_item = self.playing_list_item
+            target_item = self.current_playing_item
         except:
             target_item = None
 
@@ -189,6 +192,7 @@ class MusicPlaylist(gtk.VBox):
 
     def relogin(self):
         nplayer.relogin()
+        self.personal_fm_item.song_view.delete_all_items()
         self.category_list.delete_items([item for item in self.items if
             item.list_type!=MusicListItem.PLAYING_LIST_TYPE])
         self.login_item = MusicListItem("登录", MusicListItem.LOGIN_LIST_TYPE)
@@ -202,29 +206,59 @@ class MusicPlaylist(gtk.VBox):
         switch_tab(self.view_box, item.list_widget)
 
     def save(self, *args):
-        songs = self.playing_list_item.song_view.dump_songs()
-        song = self.current_item.current_song
-        if song:
-            utils.save_db((song.get_dict(),
-                songs, self.playing_list_item.song_view.playback_mode),
-                self.listen_db_file)
+        if Player.get_source() == self.playing_list_item.song_view:
+            current_playing_item = 'playing_list'
+        elif Player.get_source() == self.personal_fm_item.song_view:
+            current_playing_item = 'personal_fm'
         else:
-            utils.save_db((None, songs,
-                self.playing_list_item.song_view.playback_mode),
-                self.listen_db_file)
+            current_playing_item = None
+
+        playback_mode = self.playing_list_item.song_view.playback_mode
+
+        playing_list_songs = self.playing_list_item.song_view.dump_songs()
+        try:
+            playing_list_song = self.playing_list_item.song_view.current_song.get_dict()
+        except:
+            playing_list_song = None
+
+        personal_fm_songs = self.personal_fm_item.song_view.dump_songs()
+        try:
+            personal_fm_song = self.personal_fm_item.song_view.current_song.get_dict()
+        except:
+            personal_fm_song = None
+
+        utils.save_db((current_playing_item,
+            (playing_list_song, playing_list_songs, playback_mode),
+            (personal_fm_song, personal_fm_songs)),
+            self.listen_db_file)
 
     def load(self):
-        objs = utils.load_db(self.listen_db_file)
-        if objs:
-            (self.last_song, songs,
-                    self.playing_list_item.song_view.playback_mode) = objs
-            if self.last_song:
-                self.last_song = Song(self.last_song)
-            self.playing_list_item.add_songs([Song(song) for song in songs])
-        else:
+        try:
+            objs = utils.load_db(self.listen_db_file)
+            (current_playing_item,
+                (playing_list_song, playing_list_songs, playback_mode),
+                (personal_fm_song, personal_fm_songs)) = objs
+            if current_playing_item == 'playing_list':
+                self.current_playing_item = self.playing_list_item
+                self.last_song = Song(playing_list_song)
+            elif current_playing_item == 'personal_fm':
+                self.current_playing_item = self.personal_fm_item
+                self.last_song = Song(personal_fm_song)
+            else:
+                self.current_playing_item = None
+                self.last_song = None
+            self.playing_list_item.song_view.playback_mode = playback_mode
+            self.playing_list_item.add_songs([Song(song) for song in
+                playing_list_songs])
+            if nplayer.is_login:
+                self.personal_fm_item.add_songs([Song(song) for song in
+                    personal_fm_songs])
+
+        except:
             self.last_song = None
             self.playing_list_item.song_view.playback_mode = MusicView.LIST_REPEAT
-
+            utils.save_db(None, self.listen_db_file)
+            return
 
     def del_listen_list(self, item):
         def del_list():
@@ -244,11 +278,6 @@ class MusicPlaylist(gtk.VBox):
                 self.current_item.song_view.set_hide_columns(None)
             else:
                 self.current_item.song_view.set_hide_columns([1])
-
-    def on_event_login_success(self, obj, data):
-        """ load online playlists when user login success """
-
-        self.load_online_lists()
 
     def on_event_collect_songs(self, obj, data):
         self.collect_list_item.add_songs(data, pos=0)
@@ -275,8 +304,6 @@ class MusicPlaylist(gtk.VBox):
                 item.list_type!=MusicListItem.PLAYING_LIST_TYPE])
         except:
             pass
-        self.personal_fm_item = MusicListItem("私人FM",
-                MusicListItem.PERSONAL_FM_ITEM)
         self.category_list.add_items([self.personal_fm_item])
         self.online_thread_id += 1
         thread_id = copy.deepcopy(self.online_thread_id)
