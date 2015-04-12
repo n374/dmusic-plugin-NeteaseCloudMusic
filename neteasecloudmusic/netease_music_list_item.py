@@ -38,7 +38,7 @@ class LoginBox(gtk.HBox):
 
         self.login_button = LoginButton(callback)
         self.username_entry = gtk.Entry()
-        self.username_entry.set_text('username')
+        self.username_entry.set_text('username or phone')
         self.password_entry = gtk.Entry()
         self.password_entry.set_text('password')
         self.password_entry.set_visibility(False)

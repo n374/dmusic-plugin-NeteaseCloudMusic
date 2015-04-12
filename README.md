@@ -14,6 +14,9 @@
 
 播放创建的歌单、收藏的歌单
 
+播放私人FM
+
+
 ![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot001.png)
 ![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot002.png)
 
