@@ -38,19 +38,28 @@ class MusicPlayer(NetEase):
         if not os.path.exists(save_path):
             utils.makedirs(save_path)
 
-        lrc = data['lrc']['lyric']
-        tlyric = data['tlyric']['lyric']
-        try:
-            klyric = data['klyric']['lyric']
-        except:
-            klyric = None
-        lrc_content = klyric or lrc or tlyric
-        lrc_path = os.path.join(save_path, str(sid)+'.lrc')
-        if not os.path.exists(lrc_path):
-            with open(lrc_path, 'w') as f:
-                f.write(lrc_content)
+        if not data.get('nolyric'):
+            try:
+                lrc = data['lrc']['lyric']
+            except:
+                lrc = None
+            try:
+                tlyric = data['tlyric']['lyric']
+            except:
+                tlyric = None
+            try:
+                klyric = data['klyric']['lyric']
+            except:
+                klyric = None
+            lrc_content = klyric or lrc or tlyric
+            lrc_path = os.path.join(save_path, str(sid)+'.lrc')
+            if not os.path.exists(lrc_path):
+                with open(lrc_path, 'w') as f:
+                    f.write(lrc_content)
 
-        return lrc_path
+            return lrc_path
+        print '>>> This song(id', str(id), ') has no lrc from music.163.com'
+        return None
 
     @property
     def ClientInfo(self):

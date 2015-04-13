@@ -187,15 +187,9 @@ class MusicView(TreeView):
 
     def request_song(self, song, play=True):
         self.set_highlight_song(song)
-        if self.adjust_uri_expired(song):
-            self.request_thread_id += 1
-            thread_id = copy.deepcopy(self.request_thread_id)
-            utils.ThreadFetch(
-                fetch_funcs=(nplayer.song_detail, (song['sid'],)),
-                success_funcs=(self.render_play_song, (play, thread_id))
-                ).start()
-        else:
-            self.play_song(song, play=True)
+        print 'requesting song id', song['sid'], song['uri']
+        nplayer.save_lyric(nplayer.get_lyric(song['sid']), song['sid'])
+        self.play_song(song, play=True)
 
     def pre_fetch_fm_songs(self):
         if (self.highlight_item and (self.highlight_item in self.items) and

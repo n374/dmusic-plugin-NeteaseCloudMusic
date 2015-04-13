@@ -29,11 +29,13 @@
 '''
 
 import re
+import os
 import json
 import requests
 import hashlib
 import utils
 from xdg_support import get_cache_file
+from config import config
 
 # list去重
 def uniq(arr):
@@ -175,6 +177,8 @@ class NetEase(object):
                 item['title'] = item['name']
                 item['uri'] = item['mp3Url']
                 item['#duration'] = item['duration']
+                save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
+                item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
             return tracks
         except:
             return None
@@ -220,6 +224,8 @@ class NetEase(object):
                 item['title'] = item['name']
                 item['uri'] = item['mp3Url']
                 item['#duration'] = item['duration']
+                save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
+                item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
             return tracks
         except:
             return []
@@ -295,6 +301,8 @@ class NetEase(object):
                 item['title'] = item['name']
                 item['uri'] = item['mp3Url']
                 item['#duration'] = item['duration']
+                item['location_lrc'] = os.path.join(save_path, str(sid)+'.lrc')
+                print 'songdetail', os.path.join(save_path, str(sid)+'.lrc')
             return songs_info[0]
         except:
             return []
