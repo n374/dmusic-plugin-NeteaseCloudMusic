@@ -272,7 +272,7 @@ class MusicView(TreeView):
             return
 
         for song in songs:
-            song['title'] = song['title'] + ' - ' + ','.join([artist['name'] for
+            song['title'] = song['name'] + ' - ' + ','.join([artist['name'] for
                 artist in song['artists']])
 
         try:
