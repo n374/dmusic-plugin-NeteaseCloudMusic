@@ -243,12 +243,6 @@ class MusicListItem(TreeItem):
 
         return self.main_box
 
-    def on_event_login_success(self, obj, data):
-        self.song_view.load_online_playlists(clear=True)
-        switch_tab(self.main_box, self.song_view)
-
-        self.emit_redraw_request()
-
     def dump_list(self):
         songs = self.song_view.dump_songs()
         return (self.title, songs)

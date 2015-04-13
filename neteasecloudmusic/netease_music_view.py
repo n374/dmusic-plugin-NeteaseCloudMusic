@@ -72,12 +72,6 @@ class MusicView(TreeView):
         self.onlinelist_thread_id = 0
         self.collect_page = 0
 
-        #self.load_online_playlists()
-        #if self.view_type == self.DEFAULT_TYPE:
-            #self.load()
-        #elif self.view_type == self.COLLECT_TYPE:
-            #self.load_collect_songs()
-        #elif self.view_type == self.PLAYLIST_TYPE:
         self.load_onlinelist_songs()
 
     @property
@@ -204,7 +198,8 @@ class MusicView(TreeView):
             self.play_song(song, play=True)
 
     def pre_fetch_fm_songs(self):
-        if self.highlight_item and self.highlight_item in self.items:
+        if (self.highlight_item and (self.highlight_item in self.items) and
+                self.view_type == self.PERSONAL_FM_ITEM):
             current_index = self.items.index(self.highlight_item)
             if current_index >= len(self.items)-2:
                 songs = nplayer.personal_fm()
@@ -212,7 +207,7 @@ class MusicView(TreeView):
                 if count > 0:
                     self.delete_items([self.items[i] for i in range(count)])
                 self.add_songs(songs)
-                event_manager.emit("save-playing-status")
+                #event_manager.emit("save-playing-status")
 
     def adjust_uri_expired(self, song):
         expire_time = song.get("uri_expire_time", None)
@@ -265,19 +260,6 @@ class MusicView(TreeView):
             songs.append(song_item.get_song())
         return songs
 
-    def load_online_playlists(self, clear=False):
-        if clear:
-            self.clear()
-
-        if not nplayer.is_login:
-            return
-        self.collect_thread_id += 1
-        thread_id = copy.deepcopy(self.collect_thread_id)
-        utils.ThreadFetch(
-            fetch_funcs=(nplayer.get_collect_songs, (self.collect_page,)),
-            success_funcs=(self.render_collect_songs, (thread_id,))
-            ).start()
-
     def get_songs(self):
         songs = []
         self.update_item_index()
@@ -288,6 +270,10 @@ class MusicView(TreeView):
     def add_songs(self, songs, pos=None, sort=False, play=False):
         if not songs:
             return
+
+        for song in songs:
+            song['title'] = song['title'] + ' - ' + ','.join([artist['name'] for
+                artist in song['artists']])
 
         try:
             song_items = [ SongItem(song) for song in songs if song not in
@@ -300,6 +286,7 @@ class MusicView(TreeView):
             if not self.items:
                 self.emit_add_signal()
             self.add_items(song_items, pos, False)
+            event_manager.emit("save-playing-status")
 
         if len(songs) >= 1 and play:
             song = songs[0]
