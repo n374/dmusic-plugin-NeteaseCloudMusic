@@ -155,6 +155,17 @@ class NetEase(object):
         else:
             return None
 
+    def get_lyric(self, sid):
+        if sid:
+            action = 'http://music.163.com/api/song/lyric?os=pc&id=' + str(sid) + '&lv=-1&tv=-1&kv=-1&cp=true'
+            try:
+                data = self.httpRequest('GET', action)
+                return data
+            except:
+                return []
+        else:
+            return None
+
     def personal_fm(self):
         action = 'http://music.163.com/api/radio/get'
         try:

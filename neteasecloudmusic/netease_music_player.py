@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+from config import config
+
 from netease_events import event_manager
 
 try:
@@ -29,6 +32,25 @@ class MusicPlayer(NetEase):
         #self.cookie = ""
         #self.username = ""
         self.uid = self.get_uid()
+
+    def save_lyric(self, data, sid):
+        save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
+        if not os.path.exists(save_path):
+            utils.makedirs(save_path)
+
+        lrc = data['lrc']['lyric']
+        tlyric = data['tlyric']['lyric']
+        try:
+            klyric = data['klyric']['lyric']
+        except:
+            klyric = None
+        lrc_content = klyric or lrc or tlyric
+        lrc_path = os.path.join(save_path, str(sid)+'.lrc')
+        if not os.path.exists(lrc_path):
+            with open(lrc_path, 'w') as f:
+                f.write(lrc_content)
+
+        return lrc_path
 
     @property
     def ClientInfo(self):
