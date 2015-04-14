@@ -175,12 +175,15 @@ class NetEase(object):
             for item in tracks:
                 item['sid'] = item['id']
                 item['title'] = item['name']
+                item['artist'] = ','.join([artist['name'] for artist in
+                    item['artists']])
                 item['uri'] = item['mp3Url']
                 item['#duration'] = item['duration']
                 save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
                 item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
             return tracks
         except:
+            print 'get personal_fm failed'
             return None
 
     # 搜索单曲(1)，歌手(100)，专辑(10)，歌单(1000)，用户(1002) *(type)*
@@ -222,12 +225,15 @@ class NetEase(object):
             for item in tracks:
                 item['sid'] = item['id']
                 item['title'] = item['name']
+                item['artist'] = ','.join([artist['name'] for artist in
+                    item['artists']])
                 item['uri'] = item['mp3Url']
                 item['#duration'] = item['duration']
                 save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
                 item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
             return tracks
         except:
+            print 'get playlist_detail failed'
             return []
 
     # 热门歌手 http://music.163.com/#/discover/artist/
@@ -284,10 +290,13 @@ class NetEase(object):
             for item in songs_info:
                 item['sid'] = item['id']
                 item['title'] = item['name']
+                item['artist'] = ','.join([artist['name'] for artist in
+                    item['artists']])
                 item['uri'] = item['mp3Url']
                 item['#duration'] = item['duration']
             return songs_info
         except:
+            print 'get songs_detail failed'
             return []
 
     # song id --> song url ( details )
@@ -299,12 +308,14 @@ class NetEase(object):
             for item in songs_info:
                 item['sid'] = item['id']
                 item['title'] = item['name']
+                item['artist'] = ','.join([artist['name'] for artist in
+                    item['artists']])
                 item['uri'] = item['mp3Url']
                 item['#duration'] = item['duration']
                 item['location_lrc'] = os.path.join(save_path, str(sid)+'.lrc')
-                print 'songdetail', os.path.join(save_path, str(sid)+'.lrc')
             return songs_info[0]
         except:
+            print 'get song_detail failed'
             return []
 
     # 今日最热（0）, 本周最热（10），历史最热（20），最新节目（30）
