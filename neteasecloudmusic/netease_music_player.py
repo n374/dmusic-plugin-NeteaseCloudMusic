@@ -43,19 +43,22 @@ class MusicPlayer(NetEase):
                 lrc = data['lrc']['lyric']
             except:
                 lrc = None
-            try:
-                tlyric = data['tlyric']['lyric']
-            except:
-                tlyric = None
-            try:
-                klyric = data['klyric']['lyric']
-            except:
-                klyric = None
-            lrc_content = klyric or lrc or tlyric
+            # deepin music 好像不支持tlyric, tlyric应该是英文歌词的翻译
+            # 最好能把英文和翻译合并起来
+            #try:
+                #tlyric = data['tlyric']['lyric']
+            #except:
+                #tlyric = None
+            #try:
+                #klyric = data['klyric']['lyric']
+            #except:
+                #klyric = None
+            #lrc_content = klyric or lrc or tlyric
+            lrc_content = lrc
             lrc_path = os.path.join(save_path, str(sid)+'.lrc')
-            if not os.path.exists(lrc_path):
+            if not os.path.exists(lrc_path) and lrc_content:
                 with open(lrc_path, 'w') as f:
-                    f.write(lrc_content)
+                    f.write(str(lrc_content))
 
             return lrc_path
         print '>>> This song(id', str(id), ') has no lrc from music.163.com'
