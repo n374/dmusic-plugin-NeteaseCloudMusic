@@ -16,7 +16,7 @@
 
 播放私人FM
 
-支持从网易获取歌词
+支持从网易获取歌词及封面
 
 ![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot001.png)
 ![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot002.png)

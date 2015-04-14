@@ -72,7 +72,9 @@ class MusicView(TreeView):
         self.onlinelist_thread_id = 0
         self.collect_page = 0
 
-        self.load_onlinelist_songs()
+        if self.view_type not in [self.PLAYING_LIST_TYPE, self.LOGIN_LIST_TYPE,
+                self.PERSONAL_FM_ITEM]:
+            self.load_onlinelist_songs()
 
     @property
     def items(self):
