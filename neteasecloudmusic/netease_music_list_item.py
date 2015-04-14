@@ -252,4 +252,4 @@ class MusicListItem(TreeItem):
     refrush = property(lambda self: self.song_view.refrush)
     list_id = property(lambda self: self.song_view.list_id)
     current_song = property(lambda self: self.song_view.current_song)
-    play_song = property(lambda self: self.song_view.play_song)
+    play_song = property(lambda self: self.song_view.request_song)
