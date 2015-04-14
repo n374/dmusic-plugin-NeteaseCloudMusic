@@ -197,11 +197,15 @@ class MusicView(TreeView):
             current_index = self.items.index(self.highlight_item)
             if current_index >= len(self.items)-2:
                 songs = nplayer.personal_fm()
-                count = len(self.items) + len(songs) - 17
-                if count > 0:
-                    self.delete_items([self.items[i] for i in range(count)])
-                self.add_songs(songs)
-                #event_manager.emit("save-playing-status")
+                if songs:
+                    songs = [song for song in songs
+                            if song not in self.get_songs()]
+                    count = len(self.items) + len(songs) - 17
+                    if count == 0:
+                        self.pre_fetch_fm_songs()
+                    else:
+                        self.delete_items([self.items[i] for i in range(count)])
+                        self.add_songs(songs)
 
     def adjust_uri_expired(self, song):
         expire_time = song.get("uri_expire_time", None)
