@@ -139,8 +139,7 @@ class MusicPlaylist(gtk.VBox):
         if item:
             self.right_clicked_item = item
             if item.list_type == MusicListItem.PLAYING_LIST_TYPE:
-                sub_menu = self.get_playback_mode_menu()
-                menu_items.insert(0, (None, 'Playback mode', sub_menu))
+                pass
             elif item.list_type == MusicListItem.CREATED_LIST_TYPE:
                 menu_items.insert(0, (None, "Add",
                     self.add_list_to_playing_list))
@@ -159,26 +158,6 @@ class MusicPlaylist(gtk.VBox):
 
         if menu_items:
             Menu(menu_items, True).show((x, y))
-
-    def get_playback_mode_menu(self):
-        strings = ['List repeat', 'Single repeat', 'Order play', 'Randomize']
-        mode = self.playing_list_item.song_view.playback_mode
-        strings = ['   '+string if i!=mode-1 else '✓'+string for i, string in
-                enumerate(strings)]
-        menu = Menu([(None, strings[0],
-            self.playing_list_item.song_view.set_playback_mode,
-            MusicView.LIST_REPEAT),
-            (None, strings[1],
-                self.playing_list_item.song_view.set_playback_mode,
-                MusicView.SINGLE_REPEAT),
-            (None, strings[2],
-                self.playing_list_item.song_view.set_playback_mode,
-                MusicView.ORDER_PLAY),
-            (None, strings[3],
-                self.playing_list_item.song_view.set_playback_mode,
-                MusicView.RANDOMIZE)])
-
-        return menu
 
     def add_list_to_playing_list(self):
         self.playing_list_item.song_view.add_songs(
@@ -213,8 +192,6 @@ class MusicPlaylist(gtk.VBox):
         else:
             current_playing_item = None
 
-        playback_mode = self.playing_list_item.song_view.playback_mode
-
         playing_list_songs = self.playing_list_item.song_view.dump_songs()
         try:
             playing_list_song = self.playing_list_item.song_view.current_song.get_dict()
@@ -228,7 +205,7 @@ class MusicPlaylist(gtk.VBox):
             personal_fm_song = None
 
         utils.save_db((current_playing_item,
-            (playing_list_song, playing_list_songs, playback_mode),
+            (playing_list_song, playing_list_songs),
             (personal_fm_song, personal_fm_songs)),
             self.listen_db_file)
 
@@ -236,7 +213,7 @@ class MusicPlaylist(gtk.VBox):
         try:
             objs = utils.load_db(self.listen_db_file)
             (current_playing_item,
-                (playing_list_song, playing_list_songs, playback_mode),
+                (playing_list_song, playing_list_songs),
                 (personal_fm_song, personal_fm_songs)) = objs
             if current_playing_item == 'playing_list':
                 self.current_playing_item = self.playing_list_item
@@ -247,7 +224,6 @@ class MusicPlaylist(gtk.VBox):
             else:
                 self.current_playing_item = None
                 self.last_song = None
-            self.playing_list_item.song_view.playback_mode = playback_mode
             self.playing_list_item.add_songs([Song(song) for song in
                 playing_list_songs])
             if nplayer.is_login:
@@ -256,7 +232,6 @@ class MusicPlaylist(gtk.VBox):
 
         except:
             self.last_song = None
-            self.playing_list_item.song_view.playback_mode = MusicView.LIST_REPEAT
             utils.save_db(None, self.listen_db_file)
             return
 

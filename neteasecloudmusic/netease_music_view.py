@@ -19,6 +19,7 @@ import utils
 from xdg_support import get_cache_file
 from nls import _
 from song import Song
+from config import config
 
 from netease_music_player import neteasecloud_music_player as nplayer
 from netease_events import event_manager
@@ -80,6 +81,10 @@ class MusicView(TreeView):
     @property
     def items(self):
         return self.get_items()
+
+    @property
+    def playback_mode(self):
+        return config.get("setting", "loop_mode")
 
     def on_music_view_double_click(self, widget, item, column, x, y):
         if item:
@@ -311,10 +316,6 @@ class MusicView(TreeView):
         if song in self.items:
             self.items[self.items.index(SongItem(song))].update(song, True)
 
-    def set_playback_mode(self, playback_mode):
-        self.playback_mode = playback_mode
-        event_manager.emit('save-playing-status')
-
     def get_next_song(self, maunal=False):
         if len(self.items) <= 0:
             return
@@ -326,17 +327,17 @@ class MusicView(TreeView):
         if self.highlight_item:
             if self.highlight_item in self.items:
                 current_index = self.items.index(self.highlight_item)
-                if self.playback_mode == self.LIST_REPEAT:
+                if self.playback_mode == 'list_mode':
                     next_index = current_index + 1
                     if next_index > len(self.items) - 1:
                         next_index = 0
-                elif self.playback_mode == self.SINGLE_REPEAT:
+                elif self.playback_mode == 'single_mode':
                     next_index = current_index
-                elif self.playback_mode == self.ORDER_PLAY:
+                elif self.playback_mode == 'order_mode':
                     next_index = current_index + 1
                     if next_index > len(self.items) - 1:
                         return
-                elif self.playback_mode == self.RANDOMIZE:
+                elif self.playback_mode == 'random_mode':
                     next_index = random.choice(
                             range(0, current_index)
                             +range(current_index+1, len(self.items)))
@@ -372,17 +373,17 @@ class MusicView(TreeView):
         if self.highlight_item:
             if self.highlight_item in self.items:
                 current_index = self.items.index(self.highlight_item)
-                if self.playback_mode == self.LIST_REPEAT:
+                if self.playback_mode == 'list_mode':
                     pervious_song = current_index - 1
                     if pervious_song > len(self.items) - 1:
                         pervious_song = 0
-                elif self.playback_mode == self.SINGLE_REPEAT:
+                elif self.playback_mode == 'single_mode':
                     pervious_song = current_index
-                elif self.playback_mode == self.ORDER_PLAY:
+                elif self.playback_mode == 'order_mode':
                     pervious_song = current_index - 1
                     if pervious_song < 0:
                         return
-                elif self.playback_mode == self.RANDOMIZE:
+                elif self.playback_mode == 'random_mode':
                     pervious_song = random.choice(
                             range(0, current_index)
                             +range(current_index+1, len(self.items)))
