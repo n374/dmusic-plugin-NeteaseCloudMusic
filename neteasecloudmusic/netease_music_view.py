@@ -283,10 +283,6 @@ class MusicView(TreeView):
         if not songs:
             return
 
-        for song in songs:
-            song['title'] = song['name'] + ' - ' + ','.join([artist['name'] for
-                artist in song['artists']])
-
         try:
             song_items = [ SongItem(song) for song in songs if song not in
                     self.get_playlist_songs() ]
