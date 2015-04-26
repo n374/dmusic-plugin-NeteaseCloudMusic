@@ -29,6 +29,14 @@ sudo apt-add-repository ppa:noobslab/deepin-sc
 sudo apt-get update
 sudo apt-get install deepin-music-player
 ```
+- **安装Requests库**
+
+部分发行版的Python没有自带Requests库，如[openSUSE 13.2](https://github.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/issues/3)，请手动安装
+```
+sudo pip install requests
+```
+或者参照[官方文档](http://docs.python-requests.org/en/latest/user/install/#install)
+
 
 - **安装网易云音乐插件**
 ```
