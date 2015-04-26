@@ -18,25 +18,27 @@ from constant import PLAYLIST_WIDTH, CATEGROYLIST_WIDTH
 from netease_music_view import MusicView, nplayer
 from netease_music_tools import get_image
 from netease_events import event_manager
+from netease_music_browser import LoginDialog
 
 class LoginButton(ComplexButton):
-    def __init__(self, callback=None):
+    def __init__(self, title, callback=None):
         bg_group = (app_theme.get_pixbuf("jobs/complex_normal.png"),
                     app_theme.get_pixbuf("jobs/complex_hover.png"),
                     app_theme.get_pixbuf("jobs/complex_press.png"))
 
         icon = app_theme.get_pixbuf("filter/artist_normal.png")
-        super(LoginButton, self).__init__(bg_group, icon, "登录网易账号",
+        super(LoginButton, self).__init__(bg_group, icon, title,
                 left_padding=10)
 
         if callback:
             self.connect("clicked", callback)
 
 class LoginBox(gtk.HBox):
-    def __init__(self, callback=None):
+    def __init__(self, callback1=None, callback2=None):
         super(LoginBox, self).__init__()
 
-        self.login_button = LoginButton(callback)
+        self.login_button = LoginButton("登陆网易帐号", callback1)
+        self.sina_microblog_login_button = LoginButton("新浪微博登录", callback2)
         self.username_entry = gtk.Entry()
         self.username_entry.set_text('username or phone')
         self.password_entry = gtk.Entry()
@@ -49,6 +51,10 @@ class LoginBox(gtk.HBox):
         login_box = gtk.HButtonBox()
         login_box.pack_start(self.login_button, False, False, 16)
         content_box.pack_start(login_box, False, False, 16)
+        sina_microblog_login_box = gtk.HButtonBox()
+        sina_microblog_login_box.pack_start(
+                self.sina_microblog_login_button, False, False, 16)
+        content_box.pack_start(sina_microblog_login_box, False, False, 16)
         content_box.pack_start(create_upper_align(), True, True)
 
         self.pack_start(create_right_align(), True, True)
@@ -107,12 +113,15 @@ class MusicListItem(TreeItem):
         self.song_view.set_size_request(PLAYLIST_WIDTH, -1)
 
         if self.list_type == self.LOGIN_LIST_TYPE:
-            self.login_box = LoginBox(lambda w:
-                    event_manager.emit("login"))
+            self.login_box = LoginBox(self.login, self.login_with_sina_microblog_account)
 
             event_manager.connect("login", self.login)
 
         self.main_box = gtk.VBox()
+
+    def login_with_sina_microblog_account(self, *kwargs):
+        self.login_dialog = LoginDialog("http://music.163.com/api/sns/authorize?snsType=2&clientType=web2&callbackType=Login&forcelogin=true")
+        self.login_dialog.show_window()
 
     def login(self, args=None, *kwargs):
         username = self.login_box.username_entry.get_text()

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import gtk
-#import javascriptcore as jscore
+import javascriptcore as jscore
 from dtk.ui.browser import WebView
 
 from widget.ui import NetworkConnectFailed
@@ -11,6 +11,7 @@ from dtk.ui.dialog import DialogBox, DIALOG_MASK_MULTIPLE_PAGE
 from deepin_utils.net import is_network_connected
 from widget.ui_utils import switch_tab, draw_alpha_mask
 from netease_music_player import neteasecloud_music_player, player_interface
+from netease_music_player import neteasecloud_music_player as nplayer
 from netease_music_tools import get_cookie_file
 
 from netease_events import event_manager
@@ -40,11 +41,11 @@ class BaseWebView(WebView):
             self.load_uri(url)
 
         # Javascriptcore context
-        #self.js_context = jscore.JSContext(
-                #self.get_main_frame().get_global_context()).globalObject
-        #self._player.__class__.js_context = self.js_context
+        self.js_context = jscore.JSContext(
+                self.get_main_frame().get_global_context()).globalObject
+        self._player.__class__.js_context = self.js_context
 
-        # Set connect signal
+         #Set connect signal
         self.connect("window-object-cleared", self.on_webview_object_cleared)
         self.connect("script-alert", self.on_script_alert)
         self.connect("console-message", self.on_console_message)
@@ -71,6 +72,7 @@ class BaseWebView(WebView):
         pass
 
     def injection_object(self):
+        return
         self.injection_css()
         self.js_context.window.external = self.external
         self.js_context.player = self._player
@@ -87,6 +89,7 @@ class BaseWebView(WebView):
             pass
 
     def injection_frame_object(self):
+        return
         self.js_context.window.frames['centerFrame'].window.external \
                 = self.external
         self.js_context.window.frames['centerFrame'].player \
@@ -111,20 +114,49 @@ class BaseWebView(WebView):
         self.injection_object()
 
 class LoginDialog(DialogBox):
-    def __init__(self):
-        DialogBox.__init__(self, "登录", 700, 700, DIALOG_MASK_MULTIPLE_PAGE,
+    def __init__(self, url=None):
+        DialogBox.__init__(self, "登录", 600, 385, DIALOG_MASK_MULTIPLE_PAGE,
                 close_callback=self.hide_all, modal=False,
                 window_hint=None, skip_taskbar_hint=False,
                 window_pos=gtk.WIN_POS_CENTER)
 
         #self.set_keep_above(True)
         #self.is_reload_flag = False
-        self.webview = BaseWebView("")
+        self.webview = BaseWebView(url)
+        self.webview.connect("notify::load-status",
+                self.handle_login_dialog_status)
         webview_align = gtk.Alignment()
         webview_align.set(1, 1, 1, 1)
         webview_align.set_padding(0, 0, 0, 2)
         webview_align.add(self.webview)
         self.body_box.pack_start(webview_align, False, True)
+
+    def handle_login_dialog_status(self, *kwargs):
+        # When load finished
+        if str(self.webview.get_load_status()) == "<enum WEBKIT_LOAD_FINISHED of type WebKitLoadStatus>":
+            # Show current URL in terminal
+            url = self.webview.get_property('uri')
+            print "current url>>> ", url
+
+            # Hide an element
+            if 'https://api.weibo.com/oauth2/authorize' in url:
+                self.webview.execute_script('document.getElementsByClassName("WB_btn_pass")[0].style.display="None"')
+
+            elif 'http://music.163.com/back/weibo?error' in url:
+                self.close()
+            elif 'http://music.163.com/back/weibo?state=' in url:
+                # load cookie
+                cookie = {}
+                with open(get_cookie_file(), 'r') as f:
+                    for line in f.readlines():
+                        if "music.163.com" in line:
+                            line = line.split()
+                            cookie[line[5]] = line[6]
+                nplayer.cookies = cookie
+                nplayer.save_cookie(cookie)
+                print 'login-success emit from LoginDialog'
+                event_manager.emit("login-success")
+                self.close()
 
     def draw_view_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")
@@ -150,7 +182,7 @@ class MusicBrowser(gtk.VBox):
         self.login_dialog = LoginDialog()
 
         #event_manager.connect("login-dialog-run", self.on_login_dialog_run)
-        event_manager.connect("login-success", self.on_login_success)
+        #event_manager.connect("login-success", self.on_login_success)
 
     def on_login_dialog_run(self, obj, data):
         self.login_dialog.show_window()

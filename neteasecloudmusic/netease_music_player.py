@@ -108,6 +108,7 @@ class MusicPlayer(NetEase):
 
     def relogin(self):
         self.save_cookie(None)
+        self.cookies = None
         self.initial_data()
         self.logged = False
 

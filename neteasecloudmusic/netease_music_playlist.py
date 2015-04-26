@@ -279,6 +279,7 @@ class MusicPlaylist(gtk.VBox):
                 item.list_type!=MusicListItem.PLAYING_LIST_TYPE])
         except:
             pass
+
         self.category_list.add_items([self.personal_fm_item])
         self.online_thread_id += 1
         thread_id = copy.deepcopy(self.online_thread_id)
@@ -289,7 +290,7 @@ class MusicPlaylist(gtk.VBox):
             self.personal_fm_item.add_songs([Song(song) for song in songs])
 
         utils.ThreadFetch(
-                fetch_funcs=(nplayer.user_playlist, (nplayer.uid,)),
+                fetch_funcs=(nplayer.user_playlist, (nplayer.get_uid(),)),
                 success_funcs=(self.render_online_lists, (thread_id,))
                 ).start()
 

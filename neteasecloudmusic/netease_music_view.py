@@ -194,16 +194,17 @@ class MusicView(TreeView):
         self.emit("begin-add-items")
 
     def request_song(self, song, play=True):
-        self.set_highlight_song(song)
-        cover_path = get_cache_file('cover')
-        for the_file in os.listdir(cover_path):
-            file_path = os.path.join(cover_path, the_file)
-            try:
-                os.unlink(file_path)
-            except:
-                pass
-        nplayer.save_lyric(nplayer.get_lyric(song['sid']), song['sid'])
-        self.play_song(song, play=True)
+        if song:
+            self.set_highlight_song(song)
+            cover_path = get_cache_file('cover')
+            for the_file in os.listdir(cover_path):
+                file_path = os.path.join(cover_path, the_file)
+                try:
+                    os.unlink(file_path)
+                except:
+                    pass
+            nplayer.save_lyric(nplayer.get_lyric(song['sid']), song['sid'])
+            self.play_song(song, play=True)
 
     def pre_fetch_fm_songs(self):
         if (self.highlight_item and (self.highlight_item in self.items) and

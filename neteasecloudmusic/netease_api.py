@@ -99,7 +99,7 @@ class NetEase(object):
     def get_uid(self):
         try:
             self.uid = re.match('\d+',
-                    dict(self.load_cookie())['NETEASE_WDA_UID']).group()
+                    dict(self.cookies)['NETEASE_WDA_UID']).group()
             return self.uid
         except:
             return None
