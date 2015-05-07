@@ -90,8 +90,8 @@ class MusicView(TreeView):
         if item:
             song = item.get_song()
             if self.view_type in [self.PLAYING_LIST_TYPE, self.PERSONAL_FM_ITEM]:
-                self.request_song(song, play=True)
                 self.set_current_source()
+                self.request_song(song, play=True)
             else:
                 self.add_play_emit([song])
 
@@ -203,7 +203,9 @@ class MusicView(TreeView):
                     os.unlink(file_path)
                 except:
                     pass
-            nplayer.save_lyric(nplayer.get_lyric(song['sid']), song['sid'])
+            song = nplayer.get_better_quality_music(song)
+            nplayer.save_lyric(nplayer.get_lyric(song['sid']), song['sid'],
+                    song['name'], song['artist'])
             self.play_song(song, play=True)
 
     def pre_fetch_fm_songs(self):
@@ -211,16 +213,16 @@ class MusicView(TreeView):
                 self.view_type == self.PERSONAL_FM_ITEM):
             current_index = self.items.index(self.highlight_item)
             if current_index >= len(self.items)-2:
-                songs = nplayer.personal_fm()
+                songs = [Song(song) for song in nplayer.personal_fm()]
+                songs = [song for song in songs if (song['id'] not in
+                    [exists_song['id'] for exists_song in self.get_songs()])]
                 if songs:
-                    songs = [song for song in songs
-                            if song not in self.get_songs()]
                     count = len(self.items) + len(songs) - 17
-                    if count == 0:
-                        self.pre_fetch_fm_songs()
-                    else:
+                    if count > 0:
                         self.delete_items([self.items[i] for i in range(count)])
-                        self.add_songs(songs)
+                    self.add_fm(songs)
+                else:
+                    self.pre_fetch_fm_songs()
 
     def adjust_uri_expired(self, song):
         expire_time = song.get("uri_expire_time", None)
@@ -266,13 +268,6 @@ class MusicView(TreeView):
         song["fetch_time"] = time.time()
         self.play_song(Song(song), play)
 
-    def get_playlist_songs(self):
-        songs = []
-        self.update_item_index()
-        for song_item in self.items:
-            songs.append(song_item.get_song())
-        return songs
-
     def get_songs(self):
         songs = []
         self.update_item_index()
@@ -280,16 +275,28 @@ class MusicView(TreeView):
             songs.append(song_item.get_song())
         return songs
 
+    def add_fm(self, songs, pos=None, sort=False, play=False):
+        song_items = [SongItem(song) for song in songs]
+        if song_items:
+            if not self.items:
+                self.emit_add_signal()
+            self.add_items(song_items, pos, False)
+            event_manager.emit("save-playing-status")
+
+        if len(songs) >= 1 and play:
+            song = songs[0]
+            self.request_song(song, play=True)
+
     def add_songs(self, songs, pos=None, sort=False, play=False):
         if not songs:
             return
 
         try:
             song_items = [ SongItem(song) for song in songs if song not in
-                    self.get_playlist_songs() ]
+                    self.get_songs() ]
         except:
             song_items = [ SongItem(Song(song)) for song in songs if song not in
-                    self.get_playlist_songs() ]
+                    self.get_songs() ]
 
         if song_items:
             if not self.items:

@@ -168,21 +168,24 @@ class NetEase(object):
         else:
             return None
 
+    def handle_songs_info(self, tracks):
+        save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
+        for item in tracks:
+            item['sid'] = item['id']
+            item['title'] = item['name']
+            item['uri'] = item['mp3Url']
+            item['artist'] = ','.join([artist['name'] for artist in
+                item['artists']])
+            item['#duration'] = item['duration']
+            item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
+            item['album_cover_url'] = item['album']['blurPicUrl']
+        return tracks
+
     def personal_fm(self):
         action = 'http://music.163.com/api/radio/get'
         try:
             tracks = self.httpRequest('GET', action)['data']
-            for item in tracks:
-                item['sid'] = item['id']
-                item['title'] = item['name']
-                item['artist'] = ','.join([artist['name'] for artist in
-                    item['artists']])
-                item['uri'] = item['mp3Url']
-                item['#duration'] = item['duration']
-                save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
-                item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
-                item['album_cover_url'] = item['album']['blurPicUrl']
-            return tracks
+            return self.handle_songs_info(tracks)
         except:
             print 'get personal_fm failed'
             return None
@@ -223,17 +226,7 @@ class NetEase(object):
         try:
             data = self.httpRequest('GET', action)
             tracks = data['result']['tracks']
-            for item in tracks:
-                item['sid'] = item['id']
-                item['title'] = item['name']
-                item['artist'] = ','.join([artist['name'] for artist in
-                    item['artists']])
-                item['uri'] = item['mp3Url']
-                item['#duration'] = item['duration']
-                save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
-                item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
-                item['album_cover_url'] = item['album']['blurPicUrl']
-            return tracks
+            return self.handle_songs_info(tracks)
         except:
             print 'get playlist_detail failed, playlist_id:', playlist_id
             return []
@@ -289,15 +282,7 @@ class NetEase(object):
         try:
             data = self.httpRequest('GET', action)
             songs_info =  data['songs']
-            for item in songs_info:
-                item['sid'] = item['id']
-                item['title'] = item['name']
-                item['artist'] = ','.join([artist['name'] for artist in
-                    item['artists']])
-                item['uri'] = item['mp3Url']
-                item['#duration'] = item['duration']
-                item['album_cover_url'] = item['album']['blurPicUrl']
-            return songs_info
+            return self.handle_songs_info(songs_info)
         except:
             print 'get songs_detail failed, ids:', ids
             return []

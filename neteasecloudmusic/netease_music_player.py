@@ -16,6 +16,12 @@ from xdg_support import get_cache_file
 import utils
 from netease_api import NetEase
 
+try:
+    from encrypted import encrypted_id
+    print "found encrypted.py"
+except:
+    pass
+
 class MusicPlayer(NetEase):
     down_type = link_type = 0
     def __init__(self):
@@ -33,7 +39,7 @@ class MusicPlayer(NetEase):
         #self.username = ""
         self.uid = self.get_uid()
 
-    def save_lyric(self, data, sid):
+    def save_lyric(self, data, sid, name, artist):
         save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
         if not os.path.exists(save_path):
             utils.makedirs(save_path)
@@ -41,7 +47,7 @@ class MusicPlayer(NetEase):
         try:
             lrc = data['lrc']['lyric']
         except:
-            lrc = "[00:00.00] No lyric found\n"
+            lrc = "[00:00.00] "+name+' - '+artist+"\n[99:59:99] No lyric found\n"
         # deepin music 好像不支持tlyric, tlyric应该是英文歌词的翻译
         # 最好能把英文和翻译合并起来
         #try:
@@ -60,6 +66,24 @@ class MusicPlayer(NetEase):
                 f.write(str(lrc_content))
 
         return lrc_path
+
+    def get_better_quality_music(self, song):
+        try:
+            # 在有加密算法的情况下优先获取320K url
+            song_dfsId = str(song['hMusic']['dfsId'])
+            encrypted_song_id = encrypted_id(song_dfsId)
+            song['uri'] = 'http://m1.music.126.net/' + encrypted_song_id + '/' + song_dfsId + '.mp3'
+            print 'Using hMusic'
+        except:
+            try:
+                # 在有加密算法的情况下获取160K url
+                song_dfsId = str(song['mMusic']['dfsId'])
+                encrypted_song_id = encrypted_id(song_dfsId)
+                song['uri'] = 'http://m1.music.126.net/' + encrypted_song_id + '/' + song_dfsId + '.mp3'
+                print 'Using mMusic'
+            except:
+                song['uri'] = song['mp3Url']
+        return song
 
     @property
     def ClientInfo(self):
