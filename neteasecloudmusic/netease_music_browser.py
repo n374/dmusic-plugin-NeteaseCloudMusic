@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import gtk
-import javascriptcore as jscore
+#import javascriptcore as jscore
 from dtk.ui.browser import WebView
 
 from widget.ui import NetworkConnectFailed
@@ -41,9 +41,9 @@ class BaseWebView(WebView):
             self.load_uri(url)
 
         # Javascriptcore context
-        self.js_context = jscore.JSContext(
-                self.get_main_frame().get_global_context()).globalObject
-        self._player.__class__.js_context = self.js_context
+        #self.js_context = jscore.JSContext(
+                #self.get_main_frame().get_global_context()).globalObject
+        #self._player.__class__.js_context = self.js_context
 
          #Set connect signal
         self.connect("window-object-cleared", self.on_webview_object_cleared)
