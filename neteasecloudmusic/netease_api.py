@@ -207,7 +207,7 @@ class NetEase(object):
             return None
 
     def fm_trash(self, sid, time=25, alg='RT'):
-        action = 'http://music.163.com/api/radio/trash/add?alg='+alg+'&trackId='+str(sid)+'&time='+str(time)
+        action = 'http://music.163.com/api/radio/trash/add?alg='+alg+'&songId='+str(sid)+'&time='+str(time)
         try:
             data = self.httpRequest('GET', action)
             return data
