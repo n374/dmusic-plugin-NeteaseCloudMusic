@@ -73,14 +73,12 @@ class MusicPlayer(NetEase):
             song_dfsId = str(song['hMusic']['dfsId'])
             encrypted_song_id = encrypted_id(song_dfsId)
             song['uri'] = 'http://m1.music.126.net/' + encrypted_song_id + '/' + song_dfsId + '.mp3'
-            print 'Using hMusic'
         except:
             try:
                 # 在有加密算法的情况下获取160K url
                 song_dfsId = str(song['mMusic']['dfsId'])
                 encrypted_song_id = encrypted_id(song_dfsId)
                 song['uri'] = 'http://m1.music.126.net/' + encrypted_song_id + '/' + song_dfsId + '.mp3'
-                print 'Using mMusic'
             except:
                 song['uri'] = song['mp3Url']
         return song

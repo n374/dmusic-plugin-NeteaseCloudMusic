@@ -190,6 +190,36 @@ class NetEase(object):
             print 'get personal_fm failed'
             return None
 
+    def fm_like(self, sid, like=True, time=25, alg='itembased'):
+        if like:
+            action = 'http://music.163.com/api/radio/like?alg='+alg+'&trackId='+str(sid)+'&like=true&time='+str(time)
+        else:
+            action = 'http://music.163.com/api/radio/like?alg='+alg+'&trackId='+str(sid)+'&like=false&time='+str(time)
+        try:
+            data = self.httpRequest('GET', action)
+            if data['code'] == 200:
+                return data
+            elif data['code'] == 502:
+                print 'This song may have already liked/unliked'
+                return data
+        except:
+            print 'fm like/unlike failed'
+            return None
+
+    def fm_trash(self, sid, time=25, alg='RT'):
+        action = 'http://music.163.com/api/radio/trash/add?alg='+alg+'&trackId='+str(sid)+'&time='+str(time)
+        try:
+            data = self.httpRequest('GET', action)
+            return data
+            if data['code'] == 200:
+                return data
+            elif data['code'] == 502:
+                print 'fm trash falied'
+                return data
+        except:
+            print 'fm trash failed'
+            return None
+
     # 搜索单曲(1)，歌手(100)，专辑(10)，歌单(1000)，用户(1002) *(type)*
     def search(self, s, stype=1, offset=0, total='true', limit=60):
         action = 'http://music.163.com/api/search/get/web'
