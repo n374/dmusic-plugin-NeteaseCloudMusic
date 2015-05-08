@@ -190,6 +190,7 @@ class MusicView(TreeView):
                 self.request_song(next_song)
             else:
                 self.delete_items([current_item])
+                self.pre_fetch_fm_songs()
 
     def get_sids(self, items):
         return ",".join([str(item.song['sid']) for item in items if
