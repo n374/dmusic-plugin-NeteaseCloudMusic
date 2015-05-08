@@ -10,13 +10,15 @@
 --------
 
 
-支持网易账号及手机号登录，支持新浪微博账号及二维码登录
+- 支持网易账号及手机号登录，支持新浪微博账号及二维码登录
 
-播放创建的歌单、收藏的歌单
+- 播放创建的歌单、收藏的歌单
 
-播放私人FM
+- 播放私人FM，支持红心、取消红心、删除歌曲
 
-支持从网易获取歌词及封面
+- 支持从网易获取歌词及封面
+
+- 在自行添加歌曲id加密代码的情况下可以实现320K，[详见](https://github.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/issues/5#issuecomment-99753615)
 
 ![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot003.png)
 ![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot004.png)
