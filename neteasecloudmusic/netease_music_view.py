@@ -47,6 +47,8 @@ class MusicView(TreeView):
     ORDER_PLAY = 3
     RANDOMIZE = 4
 
+    FAVORITE_SONGS = []
+
     __gsignals__ = {
             "begin-add-items" :
                 (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
@@ -77,6 +79,9 @@ class MusicView(TreeView):
         if self.view_type not in [self.PLAYING_LIST_TYPE, self.LOGIN_LIST_TYPE,
                 self.PERSONAL_FM_ITEM]:
             self.load_onlinelist_songs()
+
+        if self.view_type == self.PERSONAL_FM_ITEM:
+            self.enable_multiple_select=False
 
     @property
     def items(self):
@@ -115,6 +120,7 @@ class MusicView(TreeView):
     def on_music_view_right_press_items(self, widget, x, y,
             current_item, select_items):
         if current_item and select_items:
+            # 播放列表
             if self.view_type == self.PLAYING_LIST_TYPE:
                 if len(select_items) > 1:
                     items = [
@@ -133,7 +139,8 @@ class MusicView(TreeView):
                             (None, _("Clear List"), lambda: self.clear_items())
                             ]
                 Menu(items, True).show((int(x), int(y)))
-            if self.view_type in [self.FAVORITE_LIST_TYPE,
+            # 收藏/创建的歌单
+            elif self.view_type in [self.FAVORITE_LIST_TYPE,
                     self.COLLECTED_LIST_TYPE, self.CREATED_LIST_TYPE]:
                 if len(select_items) > 1:
                     items = [
@@ -149,8 +156,32 @@ class MusicView(TreeView):
                             (None, _("Add and Play"), lambda:
                                 self.add_play_emit([current_item.get_song()])),
                             ]
-
                 Menu(items, True).show((int(x), int(y)))
+            # 私人FM
+            elif self.view_type == self.PERSONAL_FM_ITEM:
+                items = [
+                        (None, _('Trash'), lambda:
+                            self.fm_trash(current_item.get_song()))
+                        ]
+                if current_item.get_song()['id'] in self.FAVORITE_SONGS:
+                    items.insert(0,
+                            (None, _('unLike'), lambda:
+                            self.fm_like(current_item.get_song(), False)),
+                            )
+                else:
+                    items.insert(0,
+                            (None, _('Like'), lambda:
+                            self.fm_like(current_item.get_song(), True)),
+                            )
+                Menu(items, True).show((int(x), int(y)))
+
+    def fm_like(self, song, flag):
+        print 'fm_like', flag
+        if nplayer.fm_like(song['id'], flag):
+            event_manager.emit('refresh-favorite-list')
+
+    def fm_trash(self, song):
+        print 'fm_trash'
 
     def get_sids(self, items):
         return ",".join([str(item.song['sid']) for item in items if
@@ -425,7 +456,7 @@ class MusicView(TreeView):
             songs, havemore = data
             self.add_songs(songs)
 
-    def load_onlinelist_songs(self, clear=False):
+    def load_onlinelist_songs(self, clear=True):
         if clear:
             self.clear()
 
@@ -433,7 +464,6 @@ class MusicView(TreeView):
             return
 
         if not self.view_data:
-            print 'not self.view_data'
             return
 
         playlist_id = self.list_id
@@ -447,17 +477,13 @@ class MusicView(TreeView):
 
     @post_gui
     def render_onlinelist_songs(self, songs, thread_id):
+        if songs and self.view_type == self.FAVORITE_LIST_TYPE:
+            event_manager.emit('favorite-list-refreshed', songs)
         if self.onlinelist_thread_id != thread_id:
             return
 
         if songs:
             self.add_songs([Song(song) for song in songs])
-
-    def refrush(self):
-        if self.view_type == self.COLLECT_TYPE:
-            self.load_collect_songs(clear=True)
-        elif self.view_type == self.PLAYLIST_TYPE:
-            self.load_onlinelist_songs(clear=True)
 
     @property
     def list_id(self):

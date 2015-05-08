@@ -81,6 +81,9 @@ class MusicPlaylist(gtk.VBox):
                 self.add_songs_to_playing_list)
         event_manager.connect("save-playing-status",
                 self.save)
+        event_manager.connect("favorite-list-refreshed", self.favorite_list_refreshed)
+        event_manager.connect("refresh-favorite-list",
+                self.refresh_favorite_list)
 
         # Load playlists
         self.online_thread_id = 0
@@ -121,6 +124,16 @@ class MusicPlaylist(gtk.VBox):
             self.switch_view(target_item)
             if is_network_connected():
                 self.current_item.play_song(self.last_song, play=True)
+
+    def favorite_list_refreshed(self, obj, songs):
+        # 将“我喜欢的音乐”中的歌曲传递给MusicView，以方便判断哪些歌曲已被红心
+        MusicView.FAVORITE_SONGS = [song['id'] for song in songs]
+
+    def refresh_favorite_list(self, *kwargs):
+        for item in self.category_list.items:
+            if item.list_type == MusicListItem.FAVORITE_LIST_TYPE:
+                item.song_view.load_onlinelist_songs()
+                break
 
     def draw_category_list_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutLeft")
