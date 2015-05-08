@@ -161,7 +161,7 @@ class MusicView(TreeView):
             elif self.view_type == self.PERSONAL_FM_ITEM:
                 items = [
                         (None, _('Trash'), lambda:
-                            self.fm_trash(current_item.get_song()))
+                            self.fm_trash(current_item))
                         ]
                 if current_item.get_song()['id'] in self.FAVORITE_SONGS:
                     items.insert(0,
@@ -180,8 +180,16 @@ class MusicView(TreeView):
         if nplayer.fm_like(song['id'], flag):
             event_manager.emit('refresh-favorite-list')
 
-    def fm_trash(self, song):
+    def fm_trash(self, current_item):
         print 'fm_trash'
+        if nplayer.fm_trash(current_item.get_song()['id']):
+            event_manager.emit('refresh-favorite-list')
+            if self.highlight_item == current_item:
+                next_song = self.get_next_song()
+                self.delete_items([current_item])
+                self.request_song(next_song)
+            else:
+                self.delete_items([current_item])
 
     def get_sids(self, items):
         return ",".join([str(item.song['sid']) for item in items if
