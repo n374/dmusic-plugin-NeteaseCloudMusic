@@ -220,6 +220,33 @@ class NetEase(object):
             print 'fm trash failed'
             return None
 
+    def add_to_onlinelist(self, sids, playlist_id):
+        trackIds = '['+','.join(['"'+str(sid)+'"' for sid in sids])+']'
+        data = {'trackIds': trackIds,
+                'pid': playlist_id,
+                'op': 'add',
+                'imme': 'true'}
+        action = 'http://music.163.com/api/v1/playlist/manipulate/tracks'
+        try:
+            data = self.httpRequest('POST', action, data)
+            return data
+        except:
+            print 'add to onlinelist failed'
+            return None
+
+    def delete_from_onlinelist(self, sids, playlist_id):
+        trackIds = '['+','.join(['"'+str(sid)+'"' for sid in sids])+']'
+        data = {'trackIds': trackIds,
+                'pid': playlist_id,
+                'op': 'del'}
+        action = 'http://music.163.com/api/v1/playlist/manipulate/tracks'
+        try:
+            data = self.httpRequest('POST', action, data)
+            return data
+        except:
+            print 'add to onlinelist failed'
+            return None
+
     # 搜索单曲(1)，歌手(100)，专辑(10)，歌单(1000)，用户(1002) *(type)*
     def search(self, s, stype=1, offset=0, total='true', limit=60):
         action = 'http://music.163.com/api/search/get/web'
