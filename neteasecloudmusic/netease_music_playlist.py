@@ -26,7 +26,7 @@ from netease_music_view import MusicView
 
 def login_required(func):
     """ Decorator. If not login, emit 'login-dialog-run', else run func() """
-    def inner(*args, **kwars):
+    def inner(*args, **kwargs):
         if nplayer.is_login:
             return func(*args, **kwargs)
         else:
@@ -75,15 +75,15 @@ class MusicPlaylist(gtk.VBox):
         """ Set events"""
         event_manager.connect("login-success", self.load_online_lists)
         event_manager.connect("relogin", self.relogin)
-        event_manager.connect("add-songs-to-playing-list-and-play",
-                self.add_songs_to_playing_list_and_play)
         event_manager.connect("add-songs-to-playing-list",
                 self.add_songs_to_playing_list)
         event_manager.connect("save-playing-status",
                 self.save)
-        event_manager.connect("favorite-list-refreshed", self.favorite_list_refreshed)
+        event_manager.connect("favorite-list-refreshed",
+                self.favorite_list_refreshed)
         event_manager.connect("refresh-favorite-list",
                 self.refresh_favorite_list)
+        event_manager.connect("refresh-online-list", self.refresh_online_list)
 
         # Load playlists
         self.online_thread_id = 0
@@ -104,14 +104,8 @@ class MusicPlaylist(gtk.VBox):
     current_item = property(lambda self: self.category_list.highlight_item)
     items = property(lambda self: self.category_list.visible_items)
 
-    def add_songs_to_playing_list_and_play(self, *args):
-        self.playing_list_item.song_view.add_songs(
-                self.current_item.song_view.add_and_play_songs, play=True)
-        self.save()
-
-    def add_songs_to_playing_list(self, *args):
-        self.playing_list_item.song_view.add_songs(
-                self.current_item.song_view.add_and_play_songs, play=False)
+    def add_songs_to_playing_list(self, obj, (songs, play)):
+        self.playing_list_item.song_view.add_songs(songs, play=play)
         self.save()
 
     def restore_status(self):
@@ -132,6 +126,13 @@ class MusicPlaylist(gtk.VBox):
     def refresh_favorite_list(self, *kwargs):
         for item in self.category_list.items:
             if item.list_type == MusicListItem.FAVORITE_LIST_TYPE:
+                item.song_view.load_onlinelist_songs()
+                break
+
+    def refresh_online_list(self, obj, playlist_id):
+        print obj, playlist_id
+        for item in self.category_list.items:
+            if item.list_id == playlist_id:
                 item.song_view.load_onlinelist_songs()
                 break
 
@@ -309,6 +310,8 @@ class MusicPlaylist(gtk.VBox):
 
     @post_gui
     def render_online_lists(self, playlists, thread_id):
+        MusicView.CREATED_LISTS_DICT = {playlist['name']:playlist['id'] for playlist
+                in playlists if not playlist['subscribed']}
         if self.online_thread_id != thread_id:
             return
 

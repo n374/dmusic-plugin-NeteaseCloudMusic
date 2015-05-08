@@ -48,6 +48,7 @@ class MusicView(TreeView):
     RANDOMIZE = 4
 
     FAVORITE_SONGS = []
+    CREATED_LISTS_DICT = {}
 
     __gsignals__ = {
             "begin-add-items" :
@@ -110,8 +111,7 @@ class MusicView(TreeView):
                 self.add_play_emit(songs)
 
     def add_play_emit(self, songs):
-        self.add_and_play_songs = songs
-        event_manager.emit('add-songs-to-playing-list-and-play')
+        event_manager.emit('add-songs-to-playing-list', (songs, True))
 
     def add_to_playlist(self, songs):
         self.add_and_play_songs = songs
@@ -120,42 +120,52 @@ class MusicView(TreeView):
     def on_music_view_right_press_items(self, widget, x, y,
             current_item, select_items):
         if current_item and select_items:
+            # 子菜单 - 添加到创建的歌单
+            selected_songs = [item.get_song()['id'] for item in select_items]
+            submenu = [(None, _(key), self.add_to_online_list,selected_songs,
+                self.CREATED_LISTS_DICT[key])
+                for key in self.CREATED_LISTS_DICT.keys() if
+                self.CREATED_LISTS_DICT[key] != self.list_id]
+            #submenu.insert(0,(None, _('我喜欢的音乐'),
+                #self.add_to_online_list,selected_songs, 0))
+            if self.view_type != self.PLAYING_LIST_TYPE:
+                submenu.insert(0,(None, _('播放列表'),
+                    self.add_to_online_list,selected_songs, 0))
+            submenu = Menu(submenu)
             # 播放列表
             if self.view_type == self.PLAYING_LIST_TYPE:
                 if len(select_items) > 1:
                     items = [
-                            (None, _("Play"), lambda: self.add_play_emit(
+                            (None, _("播放"), lambda: self.add_play_emit(
                                 [item.get_song() for item in select_items])),
-                            (None, _("Delete"), lambda:
-                                self.delete_items(select_items)),
-                            (None, _("Clear List"), lambda: self.clear_items())
+                            (None, _("删除"), lambda:
+                                self.delete_playing_list_items(select_items)),
+                            (None, _("清空"), lambda: self.clear_items())
                             ]
                 else:
                     items = [
-                            (None, _("Play"), lambda:
+                            (None, _("播放"), lambda:
                                 self.add_play_emit([current_item.get_song()])),
-                            (None, _("Delete"), lambda:
-                                self.delete_items([select_items])),
-                            (None, _("Clear List"), lambda: self.clear_items())
+                            (None, _("删除"), lambda:
+                                self.delete_playing_list_items(select_items)),
+                            (None, _("清空"), lambda: self.clear_items())
                             ]
+                items.insert(0, (None, _("添加到"), submenu))
                 Menu(items, True).show((int(x), int(y)))
             # 收藏/创建的歌单
             elif self.view_type in [self.FAVORITE_LIST_TYPE,
                     self.COLLECTED_LIST_TYPE, self.CREATED_LIST_TYPE]:
                 if len(select_items) > 1:
                     items = [
-                            (None, _("Add"), lambda: self.add_to_playlist(
-                                [item.get_song() for item in select_items])),
-                            (None, _("Add and Play"), lambda: self.add_play_emit(
+                            (None, _("播放"), lambda: self.add_play_emit(
                                 [item.get_song() for item in select_items])),
                             ]
                 else:
                     items = [
-                            (None, _("Add"), lambda:
-                                self.add_to_playlist([current_item.get_song()])),
-                            (None, _("Add and Play"), lambda:
+                            (None, _("播放"), lambda:
                                 self.add_play_emit([current_item.get_song()])),
                             ]
+                items.insert(0, (None, _("添加到"), submenu))
                 Menu(items, True).show((int(x), int(y)))
             # 私人FM
             elif self.view_type == self.PERSONAL_FM_ITEM:
@@ -174,6 +184,18 @@ class MusicView(TreeView):
                             self.fm_like(current_item.get_song(), True)),
                             )
                 Menu(items, True).show((int(x), int(y)))
+
+    def delete_playing_list_items(self, items):
+        self.delete_items(items)
+        event_manager.emit('save-playing-status')
+
+    def add_to_online_list(self, sids, playlist_id):
+        print 'add ', sids, 'to', playlist_id
+        if playlist_id and nplayer.add_to_onlinelist(sids, playlist_id):
+            event_manager.emit('refresh-online-list', playlist_id)
+        elif not playlist_id:
+            event_manager.emit('add-songs-to-playing-list', ([song for song in
+                self.get_songs() if song['id'] in sids], False))
 
     def fm_like(self, song, flag):
         print 'fm_like', flag
