@@ -147,7 +147,8 @@ class MusicPlaylist(gtk.VBox):
     def on_category_right_press(self, widget, x, y, item, column):
         menu_items = [
                 #(None, "新建歌单", self.new_online_list),
-                (None, "重新登录", self.relogin)
+                (None, "刷新歌单", self.refresh_online_lists),
+                (None, "重新登录", self.relogin),
                 ]
         if item:
             self.right_clicked_item = item
@@ -286,6 +287,25 @@ class MusicPlaylist(gtk.VBox):
 
         #self.current_item.add_songs(data, play=play)
 
+    def refresh_online_lists(self):
+        if self.category_list.highlight_item:
+            current_playlist_id = self.category_list.highlight_item.song_view.list_id
+        try:
+            self.category_list.delete_items([item for item in self.items if
+                item.list_type not in
+                [MusicListItem.PLAYING_LIST_TYPE, MusicListItem.PERSONAL_FM_ITEM]])
+        except:
+            pass
+
+        self.online_thread_id += 1
+        thread_id = copy.deepcopy(self.online_thread_id)
+
+        utils.ThreadFetch(
+                fetch_funcs=(nplayer.user_playlist, (nplayer.get_uid(),)),
+                success_funcs=(self.render_online_lists, (thread_id,
+                    current_playlist_id))
+                ).start()
+
     def load_online_lists(self, args, *kwargs):
         try:
             self.category_list.delete_items([item for item in self.items if
@@ -308,7 +328,8 @@ class MusicPlaylist(gtk.VBox):
                 ).start()
 
     @post_gui
-    def render_online_lists(self, playlists, thread_id):
+    def render_online_lists(self, playlists, thread_id,
+            current_playlist_id=None):
         MusicView.CREATED_LISTS_DICT = {playlist['name']:playlist['id'] for playlist
                 in playlists if not playlist['subscribed']}
         if self.online_thread_id != thread_id:
@@ -317,6 +338,15 @@ class MusicPlaylist(gtk.VBox):
         if len(playlists) > 0:
             items = [MusicListItem(data, None, True) for data in playlists]
             self.category_list.add_items(items)
+
+        if current_playlist_id and current_playlist_id in [item.song_view.list_id for item in self.category_list.items]:
+            current_item=[item for item in self.category_list.items if
+                    item.list_id==current_playlist_id][0]
+            self.category_list.set_highlight_item(current_item)
+            self.switch_view(current_item)
+        else:
+            self.category_list.set_highlight_item(self.playing_list_item)
+            self.switch_view(self.playing_list_item)
 
     def del_online_list(self, item):
         def nplayer_del_list():
