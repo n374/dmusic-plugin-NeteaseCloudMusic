@@ -16,6 +16,7 @@ from widget.skin import app_theme
 from constant import CATEGROYLIST_WIDTH, HIDE_PLAYLIST_WIDTH
 from widget.ui_utils import (draw_alpha_mask, switch_tab, draw_line)
 from xdg_support import get_cache_file
+from nls import _
 from song import Song
 from player import Player
 
@@ -145,30 +146,21 @@ class MusicPlaylist(gtk.VBox):
             self.switch_view(item)
 
     def on_category_right_press(self, widget, x, y, item, column):
+        relogin_submenu = Menu([(None, _("确定"), self.relogin)])
         menu_items = [
-                #(None, "新建歌单", self.new_online_list),
-                (None, "刷新歌单", self.refresh_online_lists),
-                (None, "重新登录", self.relogin),
+                (None, _("刷新歌单"), self.refresh_online_lists),
+                (None, _("重新登录"), relogin_submenu),
                 ]
         if item:
             self.right_clicked_item = item
             if item.list_type == MusicListItem.PLAYING_LIST_TYPE:
                 pass
             elif item.list_type == MusicListItem.CREATED_LIST_TYPE:
-                menu_items.insert(0, (None, "Add",
-                    self.add_list_to_playing_list))
-                menu_items.insert(1, (None, "Add and play",
-                    self.add_list_to_playing_list_and_play))
+                pass
             elif item.list_type == MusicListItem.COLLECTED_LIST_TYPE:
-                menu_items.insert(0, (None, "Add",
-                    self.add_list_to_playing_list))
-                menu_items.insert(1, (None, "Add and play",
-                    self.add_list_to_playing_list_and_play))
+                pass
             elif item.list_type == MusicListItem.FAVORITE_LIST_TYPE:
-                menu_items.insert(0, (None, "Add",
-                    self.add_list_to_playing_list))
-                menu_items.insert(1, (None, "Add and play",
-                    self.add_list_to_playing_list_and_play))
+                pass
 
         if menu_items:
             Menu(menu_items, True).show((x, y))

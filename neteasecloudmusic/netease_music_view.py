@@ -162,6 +162,7 @@ class MusicView(TreeView):
                             ]
                 items.insert(0, (None, _("添加到"), addto_submenu))
                 Menu(items, True).show((int(x), int(y)))
+
             # 收藏/创建的歌单
             elif self.view_type in [self.FAVORITE_LIST_TYPE,
                     self.COLLECTED_LIST_TYPE, self.CREATED_LIST_TYPE]:
@@ -180,21 +181,28 @@ class MusicView(TreeView):
                         self.FAVORITE_LIST_TYPE]:
                     items.insert(-1, (None, _("删除"), delfrom_submenu))
                 Menu(items, True).show((int(x), int(y)))
+
             # 私人FM
             elif self.view_type == self.PERSONAL_FM_ITEM:
+                select_song_name = select_items[0].get_song()['name']
+                trash_submenu = Menu([(None, _('确定'), self.fm_trash,
+                    current_item)])
                 items = [
-                        (None, _('Trash'), lambda:
-                            self.fm_trash(current_item))
+                        (None, _('删除FM - '+select_song_name), trash_submenu)
                         ]
                 if current_item.get_song()['id'] in self.FAVORITE_SONGS:
+                    unlike_submenu = Menu([(None, _('确定'), self.fm_like,
+                        current_item.get_song(), False)])
                     items.insert(0,
-                            (None, _('unLike'), lambda:
-                            self.fm_like(current_item.get_song(), False)),
+                            (None, _('取消喜欢 - '+select_song_name),
+                            unlike_submenu),
                             )
                 else:
+                    like_submenu = Menu([(None, _('确定'), self.fm_like,
+                        current_item.get_song(), True)])
                     items.insert(0,
-                            (None, _('Like'), lambda:
-                            self.fm_like(current_item.get_song(), True)),
+                            (None, _('喜欢 - '+select_song_name),
+                            like_submenu),
                             )
                 Menu(items, True).show((int(x), int(y)))
 
