@@ -130,7 +130,6 @@ class MusicPlaylist(gtk.VBox):
                 break
 
     def refresh_online_list(self, obj, playlist_id):
-        print obj, playlist_id
         for item in self.category_list.items:
             if item.list_id == playlist_id:
                 item.song_view.load_onlinelist_songs()
