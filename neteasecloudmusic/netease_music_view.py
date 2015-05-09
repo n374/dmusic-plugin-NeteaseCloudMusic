@@ -120,18 +120,29 @@ class MusicView(TreeView):
     def on_music_view_right_press_items(self, widget, x, y,
             current_item, select_items):
         if current_item and select_items:
+            selected_songs_id = [item.get_song()['id'] for item in select_items]
+
             # 子菜单 - 添加到创建的歌单
-            selected_songs = [item.get_song()['id'] for item in select_items]
-            submenu = [(None, _(key), self.add_to_online_list,selected_songs,
+            addto_submenu = [(None, _(key),
+                self.add_to_list, selected_songs_id,
                 self.CREATED_LISTS_DICT[key])
                 for key in self.CREATED_LISTS_DICT.keys() if
                 self.CREATED_LISTS_DICT[key] != self.list_id]
-            #submenu.insert(0,(None, _('我喜欢的音乐'),
-                #self.add_to_online_list,selected_songs, 0))
             if self.view_type != self.PLAYING_LIST_TYPE:
-                submenu.insert(0,(None, _('播放列表'),
-                    self.add_to_online_list,selected_songs, 0))
-            submenu = Menu(submenu)
+                addto_submenu.insert(0,(None, _('播放列表'),
+                    self.add_to_list,selected_songs_id, 0))
+            addto_submenu = Menu(addto_submenu)
+
+            # 子菜单 - 从歌单中删除
+            delfrom_submenu = [(None, _(item.get_song()['name']), None) for item
+                    in select_items]
+            delfrom_submenu.insert(0, (None, _('**确认删除以下歌曲**'),
+                self.delete_from_online_list, selected_songs_id, self.list_id))
+            delfrom_submenu.insert(len(delfrom_submenu), (None,
+                _('**确认删除以上歌曲**'),
+                self.delete_from_online_list, selected_songs_id, self.list_id))
+            delfrom_submenu = Menu(delfrom_submenu)
+
             # 播放列表
             if self.view_type == self.PLAYING_LIST_TYPE:
                 if len(select_items) > 1:
@@ -150,7 +161,7 @@ class MusicView(TreeView):
                                 self.delete_playing_list_items(select_items)),
                             (None, _("清空"), lambda: self.clear_items())
                             ]
-                items.insert(0, (None, _("添加到"), submenu))
+                items.insert(0, (None, _("添加到"), addto_submenu))
                 Menu(items, True).show((int(x), int(y)))
             # 收藏/创建的歌单
             elif self.view_type in [self.FAVORITE_LIST_TYPE,
@@ -165,7 +176,10 @@ class MusicView(TreeView):
                             (None, _("播放"), lambda:
                                 self.add_play_emit([current_item.get_song()])),
                             ]
-                items.insert(0, (None, _("添加到"), submenu))
+                items.insert(0, (None, _("添加到"), addto_submenu))
+                if self.view_type in [self.CREATED_LIST_TYPE,
+                        self.FAVORITE_LIST_TYPE]:
+                    items.insert(-1, (None, _("删除"), delfrom_submenu))
                 Menu(items, True).show((int(x), int(y)))
             # 私人FM
             elif self.view_type == self.PERSONAL_FM_ITEM:
@@ -189,13 +203,18 @@ class MusicView(TreeView):
         self.delete_items(items)
         event_manager.emit('save-playing-status')
 
-    def add_to_online_list(self, sids, playlist_id):
+    def add_to_list(self, sids, playlist_id):
         print 'add ', sids, 'to', playlist_id
         if playlist_id and nplayer.add_to_onlinelist(sids, playlist_id):
             event_manager.emit('refresh-online-list', playlist_id)
         elif not playlist_id:
             event_manager.emit('add-songs-to-playing-list', ([song for song in
                 self.get_songs() if song['id'] in sids], False))
+
+    def delete_from_online_list(self, sids, playlist_id):
+        print 'delete', sids, 'from', playlist_id
+        if nplayer.delete_from_onlinelist(sids, playlist_id):
+            event_manager.emit('refresh-online-list', playlist_id)
 
     def fm_like(self, song, flag):
         print 'fm_like', flag
