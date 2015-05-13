@@ -14,6 +14,8 @@
 
 - 播放创建的歌单、收藏的歌单
 
+- 支持搜索、添加、删除歌曲
+
 - 播放私人FM，支持红心、取消红心、删除歌曲
 
 - 支持从网易获取歌词及封面
@@ -21,7 +23,7 @@
 - 在自行添加歌曲id加密代码的情况下可以实现320K，[详见](https://github.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/issues/5#issuecomment-99753615)
 
 ![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot003.png)
-![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot004.png)
+![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot005.png)
 
 安装方法
 ----------------------
