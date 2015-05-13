@@ -24,6 +24,7 @@ from netease_events import event_manager
 from netease_music_list_item import MusicListItem, nplayer
 from netease_music_view import CategoryView
 from netease_music_view import MusicView
+from netease_music_browser import SongView
 
 def login_required(func):
     """ Decorator. If not login, emit 'login-dialog-run', else run func() """
@@ -323,6 +324,8 @@ class MusicPlaylist(gtk.VBox):
     def render_online_lists(self, playlists, thread_id,
             current_playlist_id=None):
         MusicView.CREATED_LISTS_DICT = {playlist['name']:playlist['id'] for playlist
+                in playlists if not playlist['subscribed']}
+        SongView.CREATED_LISTS_DICT = {playlist['name']:playlist['id'] for playlist
                 in playlists if not playlist['subscribed']}
         if self.online_thread_id != thread_id:
             return
