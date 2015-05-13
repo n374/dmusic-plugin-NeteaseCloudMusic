@@ -226,12 +226,11 @@ class MusicView(TreeView):
             event_manager.emit('save-playing-status')
 
     def fm_like(self, song, flag):
-        if nplayer.fm_like(song['id'], flag, time=Player.get_position()):
+        if nplayer.fm_like(song['id'], flag):
             event_manager.emit('refresh-favorite-list')
 
     def fm_trash(self, current_item):
-        if nplayer.fm_trash(current_item.get_song()['id'],
-                time=Player.get_position()):
+        if nplayer.fm_trash(current_item.get_song()['id']):
             event_manager.emit('refresh-favorite-list')
             if self.highlight_item == current_item:
                 next_song = self.get_next_song()
@@ -381,11 +380,11 @@ class MusicView(TreeView):
             return
 
         try:
-            song_items = [ SongItem(song) for song in songs if song not in
-                    self.get_songs() ]
+            song_items = [ SongItem(song) for song in songs if song['id'] not in
+                    [exists_song['id'] for exists_song in self.get_songs()]]
         except:
             song_items = [ SongItem(Song(song)) for song in songs if song not in
-                    self.get_songs() ]
+                    [exists_song['id'] for exists_song in self.get_songs()]]
 
         if song_items:
             if not self.items:
