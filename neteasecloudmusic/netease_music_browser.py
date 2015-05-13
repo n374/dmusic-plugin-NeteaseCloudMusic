@@ -16,6 +16,242 @@ from netease_music_tools import get_cookie_file
 
 from netease_events import event_manager
 
+#from widget.completion_window import search_entry
+#from widget.browser_manager import BrowserMananger
+from player import Player
+#from widget.global_search import GlobalSearch
+#from dtk.ui.paned import HPaned
+from widget.skin import app_theme
+from netease_music_view import CategoryView, MusicView
+from dtk.ui.treeview import TreeItem
+from widget.ui_utils import (draw_single_mask, switch_tab,
+                             draw_alpha_mask, render_item_text)
+from dtk.ui.draw import draw_text
+from widget.song_item import SongItem
+from dtk.ui.utils import get_content_size
+from song import Song
+import pango
+DEFAULT_FONT_SIZE = 8
+class MusicBrowser(gtk.VBox):
+    def __init__(self):
+        super(MusicBrowser, self).__init__(False)
+        self.search_box = gtk.HBox(False)
+        #self.search_box.set_size_request(400, -1)
+        self.result_box = gtk.HBox(False)
+
+        self.search_entry = gtk.Entry()
+        self.search_entry.set_width_chars(62)
+        self.search_entry.connect('activate', self.search)
+        self.search_button = gtk.Button("Search")
+        self.search_button.connect('pressed', self.search)
+
+        self.song_list = CategoryView(enable_drag_drop=False,
+                enable_multiple_select=True)
+        self.playlist_list = CategoryView(enable_drag_drop=False,
+                enable_multiple_select=True)
+
+        self.playlist_list.connect('single-click-item', self.single_click_item)
+        self.playlist_list.connect('right-press-items', self.right_click_item)
+
+        self.search_box.pack_start(self.search_entry, False, False)
+        self.search_box.pack_end(self.search_button, False, False)
+        self.result_box.pack_start(self.playlist_list)
+        self.result_box.pack_end(self.song_list)
+        self.pack_start(self.search_box, False, False, 0)
+        self.pack_end(self.result_box)
+        self.show_all()
+        self.playlist_list.add_items([PlaylistItem(playlist) for playlist in
+            nplayer.search('你好', 1000)], clear_first=True)
+        self.song_list.add_items([SongItem(Song(song)) for song in
+            nplayer.search('你好')], clear_first=True)
+
+    def search(self, *kwargs):
+        string = self.search_entry.get_text()
+        if string:
+            self.playlist_list.add_items([PlaylistItem(playlist) for playlist in
+                nplayer.search(string, 1000)], clear_first=True)
+            self.song_list.add_items([SongItem(Song(song)) for song in
+                nplayer.search(string)], clear_first=True)
+
+    def single_click_item(self, widget, item, column, x, y):
+        """ Switch view_box content when click category_list's item """
+        print item.get_playlist['name'], item.get_playlist['id']
+
+    def right_click_item(self, widget, x, y, item, column):
+        print item.get_playlist['name'], item.get_playlist['id']
+
+class PlaylistItem(TreeItem):
+    def __init__(self, data):
+        TreeItem.__init__(self)
+
+        self.update(data, True)
+        self.column_index = 0
+        self.side_padding = 5
+        self.is_highlight = False
+        self.padding_y = 0
+        self.padding_x = 8
+        self.item_height = 20
+        self.item_width = 90
+
+    def update(self, playlist, redraw=False):
+        '''update'''
+        self.playlist = playlist
+        self.list_id = playlist['id']
+        self.title = playlist["name"]
+        self.creator = playlist["creator"]['nickname']
+        self.count = playlist["trackCount"]
+
+        # Calculate item size.
+        self.title_padding_x = 15
+        self.title_padding_y = 5
+        (self.title_width, self.title_height) = get_content_size(self.title, DEFAULT_FONT_SIZE)
+
+        self.creator_padding_x = 10
+        self.creator_padding_y = 5
+        (self.creator_width, self.creator_height) = get_content_size(self.creator, DEFAULT_FONT_SIZE)
+
+        self.count_padding_x = 2
+        self.count_padding_y = 5
+        (self.count_width, self.count_height) = get_content_size(str(self.count), DEFAULT_FONT_SIZE)
+        if redraw:
+            self.emit_redraw_request()
+
+    def get_height(self):
+        return self.item_height
+
+    def get_column_widths(self):
+        return (self.item_width,)
+
+    def get_column_renders(self):
+        return (self.render_title,)
+
+    def emit_redraw_request(self):
+        if self.redraw_request_callback:
+            self.redraw_request_callback(self)
+
+    def set_title(self, title):
+        self.title = title
+        self.emit_redraw_request()
+
+    def render_title(self, cr, rect):
+        # Draw select background.
+
+        rect.y += self.padding_y + 2
+        # draw separator
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x+1, rect.y, rect.width-2, rect.height,
+                    "globalItemHighlight")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x+1, rect.y, rect.width-2, rect.height,
+                    "globalItemHover")
+
+        rect.x += self.padding_x
+        rect.width -= self.padding_x * 2
+
+        if self.is_highlight:
+            text_color = "#FFFFFF"
+        else:
+            text_color = app_theme.get_color("labelText").get_color()
+
+        draw_text(cr, self.title, rect.x, rect.y, rect.width, rect.height,
+            text_size=10, text_color=text_color, alignment=pango.ALIGN_LEFT)
+
+    def render_title(self, cr, rect):
+        '''Render title.'''
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemHighlight")
+        elif self.is_select:
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemSelect")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemHover")
+
+        # if self.is_highlight:
+        #     text_color = "#ffffff"
+        # else:
+        #     text_color = app_theme.get_color("labelText").get_color()
+
+        rect.x += self.title_padding_x
+        rect.width -= self.title_padding_x * 2
+        render_item_text(cr, self.title, rect, self.is_select, self.is_highlight)
+
+    def render_count(self, cr, rect):
+        '''Render artist.'''
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHighlight")
+        elif self.is_select:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemSelect")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHover")
+
+
+        rect.x += self.creator_padding_x
+        rect.width -= self.creator_padding_x * 2
+        render_item_text(cr, self.count, rect, self.is_select, self.is_highlight)
+
+    def render_creator(self, cr, rect):
+        '''Render length.'''
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHighlight")
+        elif self.is_select:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemSelect")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHover")
+
+
+        rect.width -= self.creator_padding_x * 2
+        rect.x += self.creator_padding_x * 2
+        render_item_text(cr, self.creator, rect, self.is_select, self.is_highlight)
+
+    def get_column_renders(self):
+        '''Get render callbacks.'''
+        return (self.render_title, self.render_count, self.render_creator)
+
+    def get_column_widths(self):
+        '''Get sizes.'''
+        return (160, 50, 101)
+
+    def unselect(self):
+        self.is_select = False
+        self.emit_redraw_request()
+
+    def select(self):
+        self.is_select = True
+        self.emit_redraw_request()
+
+    def unhover(self, column, offset_x, offset_y):
+        self.is_hover = False
+        self.emit_redraw_request()
+
+    def hover(self, column, offset_x, offset_y):
+        self.is_hover = True
+        self.emit_redraw_request()
+
+    def highlight(self):
+        self.is_highlight = True
+        self.emit_redraw_request()
+
+    def unhighlight(self):
+        self.is_highlight = False
+        self.emit_redraw_request()
+
+    @property
+    def list_widget(self):
+        switch_tab(self.main_box, self.song_view)
+        if not nplayer.is_login and self.list_type == MusicView.LOGIN_LIST_TYPE:
+            switch_tab(self.main_box, self.login_box)
+
+        return self.main_box
+
+    def dump_list(self):
+        songs = self.song_view.dump_songs()
+        return (self.title, songs)
+
+    get_playlist = property(lambda self: self.playlist)
+    #add_songs = property(lambda self: self.song_view.add_songs)
+    #refrush = property(lambda self: self.song_view.refrush)
+    playlist_id = property(lambda self: self.list_id)
+    #current_song = property(lambda self: self.song_view.current_song)
+    #play_song = property(lambda self: self.song_view.request_song)
 
 class BaseWebView(WebView):
     def __init__(self, url, enable_plugins=False, cookie=get_cookie_file()):
@@ -160,57 +396,3 @@ class LoginDialog(DialogBox):
 
     def draw_view_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")
-
-class MusicBrowser(gtk.VBox):
-    def __init__(self):
-        super(MusicBrowser, self).__init__()
-
-        # Check network status
-        self.progress_value = 0
-        self.is_reload_flag = False
-        self.network_connected_flag = False
-        self.network_failed_box = NetworkConnectFailed(
-                self.check_network_connection)
-
-        self.webview = BaseWebView("")
-        #self.js_context = self.webview.js_context
-        #self.webview.injection_css = self.injection_css
-
-        self.check_network_connection(auto=True)
-
-        # Login Dialog
-        self.login_dialog = LoginDialog()
-
-        #event_manager.connect("login-dialog-run", self.on_login_dialog_run)
-        #event_manager.connect("login-success", self.on_login_success)
-
-    def on_login_dialog_run(self, obj, data):
-        self.login_dialog.show_window()
-
-    def on_login_success(self, obj, data):
-        self.login_dialog.hide_all()
-
-    def check_network_connection(self, auto=False):
-        if is_network_connected():
-            self.network_connected_flag = True
-            switch_tab(self, self.webview)
-            if not auto:
-                self.reload_browser()
-        else:
-            self.network_connected_flag = False
-            switch_tab(self, self.network_failed_box)
-
-    def reload_browser(self):
-        self.is_reload_flag = False
-        self.update_progress_flag = True
-        self.progress_value = 0
-        self.webview.reload()
-
-    def injection_css(self):
-        try:
-            self.js_context.window.frame['centerFrame'].document.\
-                    querySelector('#mainDiv').style.height = '405px'
-            self.js_context.document.getElementById("mainDiv").stype.height\
-                    = '405px'
-        except:
-            pass
