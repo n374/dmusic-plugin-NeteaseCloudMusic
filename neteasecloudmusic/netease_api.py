@@ -262,7 +262,13 @@ class NetEase(object):
             if stype == 1 or stype == '1':
                 songs = result['result']['songs']
                 sids = [song['id'] for song in songs]
-                return self.songs_detail(sids)
+                songs = self.songs_detail(sids)
+                final_result = []
+                for sid in sids:
+                    for song in songs:
+                        if song['id'] == sid:
+                            final_result.append(song)
+                return final_result
             # 搜索歌单
             # 歌单名称      playlist['name']
             # 歌单id        playlist['id']
