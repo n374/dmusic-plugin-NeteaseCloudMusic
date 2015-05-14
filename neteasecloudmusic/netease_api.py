@@ -281,6 +281,22 @@ class NetEase(object):
         except:
             return []
 
+    def subscribe_playlsit(self, playlist_id):
+        action = 'http://music.163.com/api/playlist/subscribe/?id=' + str(playlist_id) + '&csrf_token=' + self.cookies['__csrf']
+        try:
+            data = self.httpRequest('GET', action)
+            return data
+        except:
+            return None
+
+    def unsubscribe_playlsit(self, playlist_id):
+        action = 'http://music.163.com/api/playlist/unsubscribe/?id=' + str(playlist_id) + '&csrf_token=' + self.cookies['__csrf']
+        try:
+            data = self.httpRequest('GET', action)
+            return data
+        except:
+            return None
+
     # 新碟上架 http://music.163.com/#/discover/album/
     def new_albums(self, offset=0, limit=50):
         action = 'http://music.163.com/api/album/new?area=ALL&offset=' + str(offset) + '&total=true&limit=' + str(limit)
