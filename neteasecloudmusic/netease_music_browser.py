@@ -87,6 +87,8 @@ class MusicBrowser(gtk.VBox):
 
     def change_search_type(self, obj):
         string = self.search_entry.get_text()
+        if not string:
+            return
         index = self.search_combobox.get_active()
         if index == 0:
             self.playlist_list.hide_all()
@@ -98,7 +100,6 @@ class MusicBrowser(gtk.VBox):
             self.song_list.hide_all()
             self.playlist_list.add_items([PlaylistItem(playlist) for playlist in
                 nplayer.search(string, 1000)], clear_first=True)
-        pass
 
 class PlaylistItem(TreeItem):
     def __init__(self, data):
@@ -248,8 +249,8 @@ class PlaylistView(TreeView):
         TreeView.__init__(self, enable_drag_drop=False,
                 enable_multiple_select=True)
 
-        self.connect("double-click-item", self.on_music_view_double_click)
-        self.connect("press-return", self.on_music_view_press_return)
+        #self.connect("double-click-item", self.on_music_view_double_click)
+        #self.connect("press-return", self.on_music_view_press_return)
         self.connect("right-press-items", self.on_music_view_right_press_items)
 
     @property
@@ -267,7 +268,16 @@ class PlaylistView(TreeView):
     def on_music_view_right_press_items(self, widget, x, y,
             current_item, select_items):
         if current_item and select_items:
-            print current_item.get_playlist['name'], current_item.get_playlist_id
+            subscribe_submenu = [(None, _('确定'), self.subscribe_playlist,
+                current_item)]
+            menu_items = [
+                    (None, _('收藏歌单'), Menu(subscribe_submenu)),
+                    ]
+            Menu(menu_items, True).show((x, y))
+
+    def subscribe_playlist(self, current_item):
+        if nplayer.subscribe_playlist(current_item.get_playlist_id):
+            event_manager.emit('refresh-online-lists')
 
     def clear_items(self):
         self.clear()

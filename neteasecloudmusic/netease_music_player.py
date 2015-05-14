@@ -93,34 +93,17 @@ class MusicPlayer(NetEase):
         return {item['id']:item['name'] for item in
                 NetEase().user_playlist(self.uid, offset=0)}
 
-    def AddSongs(self, dummy_songs):
-        songs = self.parse_dummy_songs(dummy_songs)
+    def AddSongs(self, songs):
         if songs:
             event_manager.emit("add-songs", songs)
 
-    def PlaySongs(self, dummy_songs):
-        songs = self.parse_dummy_songs(dummy_songs)
+    def PlaySongs(self, songs):
         if songs:
             event_manager.emit("play-songs", songs)
 
-    def FavoriteSongs(self, dummy_songs):
-        songs = self.parse_dummy_songs(dummy_songs)
+    def FavoriteSongs(self, songs):
         if songs:
             event_manager.emit("collect-songs", songs)
-
-    @classmethod
-    def parse_dummy_songs(cls, dummy_songs, stringify=True):
-        if stringify:
-            dummy_songs = json.loads(
-                    cls.js_context.JSON.stringify(dummy_songs))
-
-        songs = []
-        for s in dummy_songs:
-            song = parse_to_dsong(s)
-            if song:
-                songs.append(song)
-
-        return songs
 
     @property
     def is_login(self):
@@ -133,21 +116,6 @@ class MusicPlayer(NetEase):
         self.cookies = None
         self.initial_data()
         self.logged = False
-
-    def alert(self, *args):
-        print args
-
-    def PhoenixLogin(self, login_type, act):
-        print "login_type: ", login_type, act
-
-    def SetLoginStatus(self, cookie, username, uid):
-        print "login_type"
-        self.cookie = cookie
-        self.username = username
-        self.uid = uid
-        if self.cookie:
-            event_manager.emit("login-success")
-        self.save()
 
     def load(self):
         obj = utils.load_db(self.config_db)

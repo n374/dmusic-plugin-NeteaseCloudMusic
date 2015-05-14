@@ -86,6 +86,7 @@ class MusicPlaylist(gtk.VBox):
         event_manager.connect("refresh-favorite-list",
                 self.refresh_favorite_list)
         event_manager.connect("refresh-online-list", self.refresh_online_list)
+        event_manager.connect("refresh-online-lists", self.refresh_online_lists)
 
         # Load playlists
         self.online_thread_id = 0
@@ -280,7 +281,7 @@ class MusicPlaylist(gtk.VBox):
 
         #self.current_item.add_songs(data, play=play)
 
-    def refresh_online_lists(self):
+    def refresh_online_lists(self, *kwargs):
         if self.category_list.highlight_item:
             current_playlist_id = self.category_list.highlight_item.song_view.list_id
         try:

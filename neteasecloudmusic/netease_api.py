@@ -281,7 +281,7 @@ class NetEase(object):
         except:
             return []
 
-    def subscribe_playlsit(self, playlist_id):
+    def subscribe_playlist(self, playlist_id):
         action = 'http://music.163.com/api/playlist/subscribe/?id=' + str(playlist_id) + '&csrf_token=' + self.cookies['__csrf']
         try:
             data = self.httpRequest('GET', action)
@@ -289,7 +289,7 @@ class NetEase(object):
         except:
             return None
 
-    def unsubscribe_playlsit(self, playlist_id):
+    def unsubscribe_playlist(self, playlist_id):
         action = 'http://music.163.com/api/playlist/unsubscribe/?id=' + str(playlist_id) + '&csrf_token=' + self.cookies['__csrf']
         try:
             data = self.httpRequest('GET', action)
