@@ -8,7 +8,6 @@ from widget.ui import NetworkConnectFailed
 from dtk.ui.dialog import DialogBox, DIALOG_MASK_MULTIPLE_PAGE
 
 from deepin_utils.net import is_network_connected
-from widget.ui_utils import switch_tab, draw_alpha_mask
 from netease_music_player import neteasecloud_music_player, player_interface
 from netease_music_player import neteasecloud_music_player as nplayer
 from netease_music_tools import get_cookie_file
@@ -59,6 +58,7 @@ class MusicBrowser(gtk.VBox):
 
         self.song_list = SongView()
         self.playlist_list = PlaylistView()
+        #self.playlist_list.connect('single-click-item', self.single_click_item)
 
         self.search_box.pack_start(self.search_combobox, False, False)
         self.search_box.pack_start(self.search_entry, False, False)
@@ -75,13 +75,11 @@ class MusicBrowser(gtk.VBox):
         index = self.search_combobox.get_active()
         if string:
             if index == 0:
-                self.song_list.show_all()
-                self.playlist_list.hide_all()
+                switch_tab(self.result_box, self.song_list)
                 self.song_list.add_items([SongItem(Song(song)) for song in
                     nplayer.search(string)], clear_first=True)
             else:
-                self.song_list.hide_all()
-                self.playlist_list.show_all()
+                switch_tab(self.result_box, self.playlist_list)
                 self.playlist_list.add_items([PlaylistItem(playlist) for
                     playlist in nplayer.search(string, 1000)], clear_first=True)
 
@@ -91,15 +89,16 @@ class MusicBrowser(gtk.VBox):
             return
         index = self.search_combobox.get_active()
         if index == 0:
-            self.playlist_list.hide_all()
-            self.song_list.show_all()
+            switch_tab(self.result_box, self.song_list)
             self.song_list.add_items([SongItem(Song(song)) for song in
                 nplayer.search(string)], clear_first=True)
         elif index == 1:
-            self.playlist_list.show_all()
-            self.song_list.hide_all()
+            switch_tab(self.result_box, self.playlist_list)
             self.playlist_list.add_items([PlaylistItem(playlist) for playlist in
                 nplayer.search(string, 1000)], clear_first=True)
+
+    def single_click_item(self, widget, item, column, x, y):
+        self.result_box.add(self.song_list)
 
 class PlaylistItem(TreeItem):
     def __init__(self, data):
@@ -251,21 +250,13 @@ class PlaylistView(TreeView):
 
         #self.connect("double-click-item", self.on_music_view_double_click)
         #self.connect("press-return", self.on_music_view_press_return)
-        self.connect("right-press-items", self.on_music_view_right_press_items)
+        self.connect("right-press-items", self.right_press_items)
 
     @property
     def items(self):
         return self.get_items()
 
-    def on_music_view_double_click(self, widget, item, column, x, y):
-        if item:
-            print item.get_playlist['name']
-
-    def on_music_view_press_return(self, widget, items):
-        if items:
-            pass
-
-    def on_music_view_right_press_items(self, widget, x, y,
+    def right_press_items(self, widget, x, y,
             current_item, select_items):
         if current_item and select_items:
             subscribe_submenu = [
