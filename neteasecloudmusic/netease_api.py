@@ -155,7 +155,7 @@ class NetEase(object):
             except:
                 return []
         else:
-            return None
+            return []
 
     def get_lyric(self, sid):
         if sid:
@@ -188,7 +188,7 @@ class NetEase(object):
             return self.handle_songs_info(tracks)
         except:
             print 'get personal_fm failed'
-            return None
+            return []
 
     def fm_like(self, sid, like=True, time=25, alg='itembased'):
         if like:
@@ -264,6 +264,7 @@ class NetEase(object):
                 sids = [song['id'] for song in songs]
                 songs = self.songs_detail(sids)
                 final_result = []
+                # 必须用这种方式才能保证搜索结果的顺序
                 for sid in sids:
                     for song in songs:
                         if song['id'] == sid:
@@ -278,7 +279,7 @@ class NetEase(object):
                 playlists = result['result']['playlists']
                 return playlists
         except:
-            return None
+            return []
 
     # 新碟上架 http://music.163.com/#/discover/album/
     def new_albums(self, offset=0, limit=50):
