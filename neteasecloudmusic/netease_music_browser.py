@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import gtk
-#import javascriptcore as jscore
 from dtk.ui.browser import WebView
 
 from widget.ui import NetworkConnectFailed
@@ -45,15 +44,11 @@ class MusicBrowser(gtk.VBox):
         self.search_button.connect('pressed', self.search)
 
         self.song_list = SongView()
-        #self.playlist_list = CategoryView(enable_drag_drop=False,
-                #enable_multiple_select=True)
-
-        #self.playlist_list.connect('single-click-item', self.single_click_item)
-        #self.playlist_list.connect('right-press-items', self.right_click_item)
+        self.playlist_list = PlaylistView()
 
         self.search_box.pack_start(self.search_entry, False, False)
         self.search_box.pack_end(self.search_button, False, False)
-        #self.result_box.pack_start(self.playlist_list)
+        self.result_box.pack_start(self.playlist_list)
         self.result_box.pack_end(self.song_list)
         self.pack_start(self.search_box, False, False, 0)
         self.pack_end(self.result_box)
@@ -62,17 +57,185 @@ class MusicBrowser(gtk.VBox):
     def search(self, *kwargs):
         string = self.search_entry.get_text()
         if string:
-            #self.playlist_list.add_items([PlaylistItem(playlist) for playlist in
-                #nplayer.search(string, 1000)], clear_first=True)
+            self.playlist_list.add_items([PlaylistItem(playlist) for playlist in
+                nplayer.search(string, 1000)], clear_first=True)
             self.song_list.add_items([SongItem(Song(song)) for song in
                 nplayer.search(string)], clear_first=True)
 
-    def single_click_item(self, widget, item, column, x, y):
-        """ Switch view_box content when click category_list's item """
-        print item.get_playlist['name'], item.get_playlist['id']
+class PlaylistItem(TreeItem):
+    def __init__(self, data):
+        TreeItem.__init__(self)
 
-    def right_click_item(self, widget, x, y, item, column):
-        print item.get_playlist['name'], item.get_playlist['id']
+        self.update(data, True)
+        self.height = 26
+        self.is_highlight = False
+
+    def update(self, playlist, redraw=False):
+        '''update'''
+        self.playlist = playlist
+        self.list_id = playlist['id']
+        self.title = playlist["name"]
+        self.creator = playlist["creator"]['nickname']
+        self.count = playlist["trackCount"]
+
+        # Calculate item size.
+        self.title_padding_x = 15
+        self.title_padding_y = 5
+        (self.title_width, self.title_height) = get_content_size(self.title, DEFAULT_FONT_SIZE)
+
+        self.creator_padding_x = 10
+        self.creator_padding_y = 5
+        (self.creator_width, self.creator_height) = get_content_size(self.creator, DEFAULT_FONT_SIZE)
+
+        self.count_padding_x = 2
+        self.count_padding_y = 5
+        (self.count_width, self.count_height) = get_content_size(str(self.count), DEFAULT_FONT_SIZE)
+        if redraw:
+            self.emit_redraw_request()
+
+    @property
+    def get_playlist_id(self):
+        return self.list_id
+
+    @property
+    def get_playlist(self):
+        return self.playlist
+
+    def get_height(self):
+        return self.height
+
+    def get_column_renders(self):
+        return (self.render_title,)
+
+    def emit_redraw_request(self):
+        if self.redraw_request_callback:
+            self.redraw_request_callback(self)
+
+    def set_title(self, title):
+        self.title = title
+        self.emit_redraw_request()
+
+    def render_title(self, cr, rect):
+        '''Render title.'''
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemHighlight")
+        elif self.is_select:
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemSelect")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemHover")
+
+        # if self.is_highlight:
+        #     text_color = "#ffffff"
+        # else:
+        #     text_color = app_theme.get_color("labelText").get_color()
+
+        rect.x += self.title_padding_x
+        rect.width -= self.title_padding_x * 2
+        render_item_text(cr, self.title, rect, self.is_select, self.is_highlight)
+
+    def render_count(self, cr, rect):
+        '''Render artist.'''
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHighlight")
+        elif self.is_select:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemSelect")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHover")
+
+
+        rect.x += self.creator_padding_x
+        rect.width -= self.creator_padding_x * 2
+        render_item_text(cr, self.count, rect, self.is_select, self.is_highlight)
+
+    def render_creator(self, cr, rect):
+        '''Render length.'''
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHighlight")
+        elif self.is_select:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemSelect")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHover")
+
+
+        rect.width -= self.creator_padding_x * 2
+        rect.x += self.creator_padding_x * 2
+        render_item_text(cr, self.creator, rect, self.is_select, self.is_highlight)
+
+    def get_column_renders(self):
+        '''Get render callbacks.'''
+        return (self.render_title, self.render_count, self.render_creator)
+
+    def get_column_widths(self):
+        '''Get sizes.'''
+        #if self.extend:
+            #return (100, 100, 100, 90)
+        #else:
+            #return (156, 102, 51)
+        return (160, 50, 101)
+
+    def unselect(self):
+        self.is_select = False
+        self.emit_redraw_request()
+
+    def select(self):
+        self.is_select = True
+        self.emit_redraw_request()
+
+    def unhover(self, column, offset_x, offset_y):
+        self.is_hover = False
+        self.emit_redraw_request()
+
+    def hover(self, column, offset_x, offset_y):
+        self.is_hover = True
+        self.emit_redraw_request()
+
+    def highlight(self):
+        self.is_highlight = True
+        self.emit_redraw_request()
+
+    def unhighlight(self):
+        self.is_highlight = False
+        self.emit_redraw_request()
+
+class PlaylistView(TreeView):
+    CREATED_LISTS_DICT = {}
+    __gsignals__ = {
+            "begin-add-items" :
+                (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+            "empty-items" :
+                (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
+            }
+
+    def __init__(self):
+        TreeView.__init__(self, enable_drag_drop=False,
+                enable_multiple_select=True)
+
+        self.connect("double-click-item", self.on_music_view_double_click)
+        self.connect("press-return", self.on_music_view_press_return)
+        self.connect("right-press-items", self.on_music_view_right_press_items)
+
+    @property
+    def items(self):
+        return self.get_items()
+
+    def on_music_view_double_click(self, widget, item, column, x, y):
+        if item:
+            print item.get_playlist['name']
+
+    def on_music_view_press_return(self, widget, items):
+        if items:
+            pass
+
+    def on_music_view_right_press_items(self, widget, x, y,
+            current_item, select_items):
+        if current_item and select_items:
+            print current_item.get_playlist['name']
+
+    def clear_items(self):
+        self.clear()
+
+    def draw_mask(self, cr, x, y, width, height):
+        draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")
 
 class SongView(TreeView):
     CREATED_LISTS_DICT = {}
