@@ -268,8 +268,14 @@ class PlaylistView(TreeView):
     def on_music_view_right_press_items(self, widget, x, y,
             current_item, select_items):
         if current_item and select_items:
-            subscribe_submenu = [(None, _('确定'), self.subscribe_playlist,
-                current_item)]
+            subscribe_submenu = [
+                    (None, _('**确定收藏**'), self.subscribe_playlist,
+                current_item),
+                    (None, _(current_item.get_playlist['name']), self.subscribe_playlist,
+                current_item),
+                    (None, _('**确定收藏**'), self.subscribe_playlist,
+                current_item),
+                    ]
             menu_items = [
                     (None, _('收藏歌单'), Menu(subscribe_submenu)),
                     ]

@@ -160,7 +160,15 @@ class MusicPlaylist(gtk.VBox):
             elif item.list_type == MusicListItem.CREATED_LIST_TYPE:
                 pass
             elif item.list_type == MusicListItem.COLLECTED_LIST_TYPE:
-                pass
+                unsubscribe_playlist_submenu = [
+                        (None, _('**确定删除**'),
+                    self.unsubscribe_playlist, item.list_id),
+                        (None, _(item.title), self.unsubscribe_playlist,
+                            item.list_id),
+                        (None, _('**确定删除**'),
+                    self.unsubscribe_playlist, item.list_id)]
+                menu_items.insert(1, (None, _('删除歌单'),
+                    Menu(unsubscribe_playlist_submenu)))
             elif item.list_type == MusicListItem.FAVORITE_LIST_TYPE:
                 pass
 
@@ -176,6 +184,10 @@ class MusicPlaylist(gtk.VBox):
         self.playing_list_item.song_view.add_songs(
                 self.right_clicked_item.song_view.get_songs(), play=True)
         self.save()
+
+    def unsubscribe_playlist(self, playlist_id):
+        if nplayer.unsubscribe_playlist(playlist_id):
+            self.refresh_online_lists()
 
     def relogin(self):
         nplayer.relogin()
