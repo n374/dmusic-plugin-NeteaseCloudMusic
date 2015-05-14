@@ -33,6 +33,11 @@ DEFAULT_FONT_SIZE = 8
 class MusicBrowser(gtk.VBox):
     def __init__(self):
         super(MusicBrowser, self).__init__(False)
+        from widget.completion_window import search_entry
+        # 将自带搜索框删除
+        for anything in search_entry.get_children():
+            search_entry.remove(anything)
+
         self.search_box = gtk.HBox(False)
         #self.search_box.set_size_request(400, -1)
         self.result_box = gtk.HBox(False)
