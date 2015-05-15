@@ -102,6 +102,7 @@ class NetEase(object):
                     dict(self.cookies)['NETEASE_WDA_UID']).group()
             return self.uid
         except:
+            print 'get uid failed'
             return None
 
     def save_cookie(self, cookie=None):
@@ -111,6 +112,7 @@ class NetEase(object):
         try:
             return utils.load_db(self.cookie_db_file)
         except:
+            print 'load cookie failed'
             return None
 
     def httpRequest(self, method, action, query=None, urlencoded=None, callback=None, timeout=None):
@@ -143,6 +145,7 @@ class NetEase(object):
         try:
             return self.httpRequest('POST', action, data)
         except:
+            print 'login failed'
             return {'code': 501}
 
     # 用户歌单
@@ -153,6 +156,7 @@ class NetEase(object):
                 data = self.httpRequest('GET', action)
                 return data['playlist']
             except:
+                print "get user's playlist failed"
                 return []
         else:
             return []
@@ -164,6 +168,7 @@ class NetEase(object):
                 data = self.httpRequest('GET', action)
                 return data
             except:
+                print 'get lyric failed'
                 return []
         else:
             return None
@@ -244,7 +249,7 @@ class NetEase(object):
             data = self.httpRequest('POST', action, data)
             return data
         except:
-            print 'add to onlinelist failed'
+            print 'delete from onlinelist failed'
             return None
 
     # 搜索单曲(1)，歌手(100)，专辑(10)，歌单(1000)，用户(1002) *(type)*
@@ -279,6 +284,7 @@ class NetEase(object):
                 playlists = result['result']['playlists']
                 return playlists
         except:
+            print 'search failed'
             return []
 
     def subscribe_playlist(self, playlist_id):
@@ -287,6 +293,7 @@ class NetEase(object):
             data = self.httpRequest('GET', action)
             return data
         except:
+            print 'subscribed playlist failed'
             return None
 
     def unsubscribe_playlist(self, playlist_id):
@@ -295,6 +302,7 @@ class NetEase(object):
             data = self.httpRequest('GET', action)
             return data
         except:
+            print 'unsubscribed playlist failed'
             return None
 
     # 新碟上架 http://music.163.com/#/discover/album/
