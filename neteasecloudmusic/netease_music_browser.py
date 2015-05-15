@@ -258,7 +258,7 @@ class PlaylistView(TreeView):
 
     def right_press_items(self, widget, x, y,
             current_item, select_items):
-        if current_item and select_items:
+        if current_item and select_items and nplayer.is_login:
             subscribe_submenu = [
                     (None, _('**确定收藏**'), self.subscribe_playlist,
                 current_item),

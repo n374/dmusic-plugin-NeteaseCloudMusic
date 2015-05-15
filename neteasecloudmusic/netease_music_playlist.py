@@ -100,6 +100,7 @@ class MusicPlaylist(gtk.VBox):
             self.login_item = MusicListItem("登录",
                     MusicListItem.LOGIN_LIST_TYPE)
             self.category_list.add_items([self.login_item])
+            self.switch_view(self.login_item)
 
         self.add(main_paned)
 
@@ -148,6 +149,8 @@ class MusicPlaylist(gtk.VBox):
             self.switch_view(item)
 
     def on_category_right_press(self, widget, x, y, item, column):
+        if not nplayer.is_login:
+            return
         relogin_submenu = Menu([(None, _("确定"), self.relogin)])
         menu_items = [
                 (None, _("刷新歌单"), self.refresh_online_lists),
@@ -191,9 +194,15 @@ class MusicPlaylist(gtk.VBox):
 
     def relogin(self):
         nplayer.relogin()
+        # 删除私人FM中的歌曲
         self.personal_fm_item.song_view.delete_all_items()
+        # 删除所有在线歌单，包括私人FM
         self.category_list.delete_items([item for item in self.items if
             item.list_type!=MusicListItem.PLAYING_LIST_TYPE])
+        # 删除其他地方保存的在线歌单列表
+        MusicView.CREATED_LISTS_DICT = {}
+        SongView.CREATED_LISTS_DICT = {}
+        # 新建登录Item
         self.login_item = MusicListItem("登录", MusicListItem.LOGIN_LIST_TYPE)
         self.category_list.add_items([self.login_item])
         self.switch_view(self.login_item)

@@ -116,6 +116,7 @@ class MusicListItem(TreeItem):
             self.login_box = LoginBox(self.login, self.login_with_sina_microblog_account)
 
             event_manager.connect("login", self.login)
+            self.login_box.password_entry.connect('activate', self.login)
 
         self.main_box = gtk.VBox()
 
