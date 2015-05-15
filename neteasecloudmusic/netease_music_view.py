@@ -285,6 +285,8 @@ class MusicView(TreeView):
         if song:
             self.set_highlight_song(song)
             cover_path = get_cache_file('cover')
+            if not os.path.exists(cover_path):
+                os.mkdir(cover_path)
             for the_file in os.listdir(cover_path):
                 file_path = os.path.join(cover_path, the_file)
                 try:

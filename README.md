@@ -36,8 +36,6 @@ sudo apt-get update
 sudo apt-get install deepin-music-player
 ```
 - **安装Requests库**
-
-部分发行版的Python没有自带Requests库，如[openSUSE 13.2](https://github.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/issues/3)，请手动安装
 ```
 sudo pip install requests
 ```

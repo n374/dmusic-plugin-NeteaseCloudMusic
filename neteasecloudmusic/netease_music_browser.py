@@ -57,7 +57,7 @@ class MusicBrowser(gtk.VBox):
         self.search_button.set_size_request(-1, 32)
 
         self.song_list = SongView()
-        self.playlist_list = PlaylistView()
+        self.playlist_list = PlaylistView(enable_multiple_select=False)
         #self.playlist_list.connect('single-click-item', self.single_click_item)
 
         self.search_box.pack_start(self.search_combobox, False, False)
@@ -244,9 +244,9 @@ class PlaylistView(TreeView):
                 (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
             }
 
-    def __init__(self):
+    def __init__(self, enable_multiple_select=True):
         TreeView.__init__(self, enable_drag_drop=False,
-                enable_multiple_select=True)
+                enable_multiple_select=enable_multiple_select)
 
         #self.connect("double-click-item", self.on_music_view_double_click)
         #self.connect("press-return", self.on_music_view_press_return)
