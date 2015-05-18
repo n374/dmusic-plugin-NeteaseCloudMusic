@@ -21,10 +21,10 @@ from dtk.ui.treeview import TreeItem, TreeView
 from widget.ui_utils import (draw_single_mask, switch_tab,
                              draw_alpha_mask, render_item_text)
 from dtk.ui.draw import draw_text
-from widget.song_item import SongItem
 from dtk.ui.utils import get_content_size
 from dtk.ui.menu import Menu
 from song import Song
+import utils
 import pango
 import gobject
 from nls import _
@@ -76,7 +76,7 @@ class MusicBrowser(gtk.VBox):
         if string:
             if index == 0:
                 switch_tab(self.result_box, self.song_list)
-                self.song_list.add_items([SongItem(Song(song)) for song in
+                self.song_list.add_items([SearchSongItem(Song(song)) for song in
                     nplayer.search(string)], clear_first=True)
             else:
                 switch_tab(self.result_box, self.playlist_list)
@@ -90,7 +90,7 @@ class MusicBrowser(gtk.VBox):
         index = self.search_combobox.get_active()
         if index == 0:
             switch_tab(self.result_box, self.song_list)
-            self.song_list.add_items([SongItem(Song(song)) for song in
+            self.song_list.add_items([SearchSongItem(Song(song)) for song in
                 nplayer.search(string)], clear_first=True)
         elif index == 1:
             switch_tab(self.result_box, self.playlist_list)
@@ -236,7 +236,6 @@ class PlaylistItem(TreeItem):
         self.emit_redraw_request()
 
 class PlaylistView(TreeView):
-    CREATED_LISTS_DICT = {}
     __gsignals__ = {
             "begin-add-items" :
                 (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
@@ -282,6 +281,173 @@ class PlaylistView(TreeView):
     def draw_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")
 
+class SearchSongItem(TreeItem):
+    def __init__(self, song):
+
+        TreeItem.__init__(self)
+
+        self.song_error = False
+        self.update(song)
+        self.height = 26
+
+        self.is_highlight = False
+        self.column_index = 0
+
+        self.default_height = 26
+
+    def emit_redraw_request(self):
+        if self.redraw_request_callback:
+            self.redraw_request_callback(self)
+
+    def update(self, song, redraw=False):
+        '''update'''
+        self.song = song
+        self.title = song.get_str("name")
+        self.artist = ','.join([artist['name'] for artist in
+            song['artists']])
+        self.length = utils.duration_to_string(int(song.get_str("duration")))
+
+        # Calculate item size.
+        self.title_padding_x = 15
+        self.title_padding_y = 5
+        (self.title_width, self.title_height) = get_content_size(self.title, DEFAULT_FONT_SIZE)
+
+        self.artist_padding_x = 10
+        self.artist_padding_y = 5
+        (self.artist_width, self.artist_height) = get_content_size(self.artist, DEFAULT_FONT_SIZE)
+
+        self.length_padding_x = 2
+        self.length_padding_y = 5
+        (self.length_width, self.length_height) = get_content_size(self.length, DEFAULT_FONT_SIZE)
+
+        if redraw:
+            self.emit_redraw_request()
+
+    def set_error(self):
+        if not self.song_error:
+            self.song_error = True
+            self.emit_redraw_request()
+
+    def clear_error(self):
+        if self.song_error:
+            self.song_error = False
+            self.emit_redraw_request()
+
+    def exists(self):
+        return self.song.exists()
+
+    def is_error(self):
+        return self.song_error == True
+
+    def render_title(self, cr, rect):
+        '''Render title.'''
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemHighlight")
+        elif self.is_select:
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemSelect")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemHover")
+
+        # if self.is_highlight:
+        #     text_color = "#ffffff"
+        # else:
+        #     text_color = app_theme.get_color("labelText").get_color()
+
+        rect.x += self.title_padding_x
+        rect.width -= self.title_padding_x * 2
+        render_item_text(cr, self.title, rect, self.is_select, self.is_highlight, error=self.song_error)
+
+    def render_artist(self, cr, rect):
+        '''Render artist.'''
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHighlight")
+        elif self.is_select:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemSelect")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHover")
+
+
+        rect.x += self.artist_padding_x
+        rect.width -= self.artist_padding_x * 2
+        render_item_text(cr, self.artist, rect, self.is_select, self.is_highlight, error=self.song_error)
+
+    def render_length(self, cr, rect):
+        '''Render length.'''
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHighlight")
+        elif self.is_select:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemSelect")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHover")
+
+
+        rect.width -= self.length_padding_x * 2
+        rect.x += self.length_padding_x * 2
+        render_item_text(cr, self.length, rect, self.is_select, self.is_highlight, error=self.song_error, font_size=8)
+
+    def get_height(self):
+        # if self.is_highlight:
+        #     return 32
+        return self.default_height
+
+    def get_column_widths(self):
+        '''Get sizes.'''
+        return (156, 51, 102)
+
+
+    def get_column_renders(self):
+        '''Get render callbacks.'''
+
+        return (self.render_title, self.render_length, self.render_artist)
+
+    def unselect(self):
+        self.is_select = False
+        self.emit_redraw_request()
+
+    def select(self):
+        self.is_select = True
+        self.emit_redraw_request()
+
+    def highlight(self):
+        self.is_highlight = True
+        self.is_select = False
+        self.emit_redraw_request()
+
+    def unhighlight(self):
+        self.is_highlight = False
+        self.is_select = False
+        self.emit_redraw_request()
+
+    def unhover(self, column, offset_x, offset_y):
+        self.is_hover = False
+        self.emit_redraw_request()
+
+    def hover(self, column, offset_x, offset_y):
+        self.is_hover = True
+        self.emit_redraw_request()
+
+    def get_song(self):
+        return self.song
+
+    def __hash__(self):
+        return hash(self.song.get("uri"))
+
+    def __repr__(self):
+        return "<SearchSongItem %s>" % self.song.get("uri")
+
+    def __cmp__(self, other_item):
+        if not other_item:
+            return -1
+        try:
+            return cmp(self.song, other_item.get_song())
+        except AttributeError: return -1
+
+    def __eq__(self, other_item):
+        try:
+            return self.song == other_item.get_song()
+        except:
+            return False
+
 class SongView(TreeView):
     CREATED_LISTS_DICT = {}
     __gsignals__ = {
@@ -311,15 +477,17 @@ class SongView(TreeView):
 
     def on_music_view_double_click(self, widget, item, column, x, y):
         if item:
-            song = item.get_song()
-            self.add_play_emit([song])
+            sid = item.get_song()['id']
+            self.add_play_emit([sid])
 
     def on_music_view_press_return(self, widget, items):
         if items:
-            songs = [item.get_song() for item in items]
-            self.add_play_emit(songs)
+            sids = [item.get_song()['id'] for item in items]
+            self.add_play_emit(sids)
 
-    def add_play_emit(self, songs):
+    def add_play_emit(self, sids):
+        songs = nplayer.songs_detail(sids)
+        songs = [Song(song) for song in songs]
         event_manager.emit('add-songs-to-playing-list', (songs, True))
 
     def add_to_playlist(self, songs):
@@ -340,12 +508,12 @@ class SongView(TreeView):
             if len(select_items) > 1:
                 items = [
                         (None, _("播放"), lambda: self.add_play_emit(
-                            [item.get_song() for item in select_items])),
+                            [item.get_song()['id'] for item in select_items])),
                         ]
             else:
                 items = [
                         (None, _("播放"), lambda:
-                            self.add_play_emit([current_item.get_song()])),
+                            self.add_play_emit([current_item.get_song()['id']])),
                         ]
             items.insert(0, (None, _("添加到"), addto_submenu))
             Menu(items, True).show((int(x), int(y)))
@@ -354,8 +522,8 @@ class SongView(TreeView):
         if playlist_id and nplayer.add_to_onlinelist(sids, playlist_id):
             event_manager.emit('refresh-online-list', playlist_id)
         elif not playlist_id:
-            event_manager.emit('add-songs-to-playing-list', ([song for song in
-                self.get_songs() if song['id'] in sids], False))
+            event_manager.emit('add-songs-to-playing-list',
+                    (nplayer.songs_detail(sids), False))
 
     def get_sids(self, items):
         return ",".join([str(item.song['sid']) for item in items if
@@ -400,10 +568,10 @@ class SongView(TreeView):
             return
 
         try:
-            song_items = [ SongItem(song) for song in songs if song not in
+            song_items = [ SearchSongItem(song) for song in songs if song not in
                     self.get_songs() ]
         except:
-            song_items = [ SongItem(Song(song)) for song in songs if song not in
+            song_items = [ SearchSongItem(Song(song)) for song in songs if song not in
                     self.get_songs() ]
 
         if song_items:
@@ -418,15 +586,15 @@ class SongView(TreeView):
 
     def set_highlight_song(self, song):
         if not song: return
-        if SongItem(song) in self.items:
-            self.set_highlight_item(self.items[self.items.index(SongItem(Song(song)))])
+        if SearchSongItem(song) in self.items:
+            self.set_highlight_item(self.items[self.items.index(SearchSongItem(Song(song)))])
             self.visible_highlight()
             self.queue_draw()
 
     def update_songitem(self, song):
         if not song: return
         if song in self.items:
-            self.items[self.items.index(SongItem(song))].update(song, True)
+            self.items[self.items.index(SearchSongItem(song))].update(song, True)
 
     def dump_songs(self):
         return [ song.get_dict() for song in self.get_songs() ]

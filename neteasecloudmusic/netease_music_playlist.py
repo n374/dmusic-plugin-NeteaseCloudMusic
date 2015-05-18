@@ -109,6 +109,8 @@ class MusicPlaylist(gtk.VBox):
     items = property(lambda self: self.category_list.visible_items)
 
     def add_songs_to_playing_list(self, obj, (songs, play)):
+        if not isinstance(songs[0], Song):
+            songs = [Song(song) for song in songs]
         self.playing_list_item.song_view.add_songs(songs, play=play)
         self.save()
 
