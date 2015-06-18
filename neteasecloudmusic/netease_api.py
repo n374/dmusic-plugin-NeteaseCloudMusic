@@ -105,6 +105,19 @@ class NetEase(object):
             print 'get uid failed'
             return None
 
+    def get_user_detail(self, uid):
+        action = 'http://music.163.com/api/user/detail/'+str(uid)+'?userId='+str(uid)+'&all=true'
+        try:
+            data = self.httpRequest('GET', action)
+            if data['code'] == 200:
+                return data['profile']
+            else:
+                print "get_user_detail failed\ncode ", data['code']
+                return None
+        except:
+            print "get_user_detail failed"
+            return None
+
     def save_cookie(self, cookie=None):
         utils.save_db(cookie, self.cookie_db_file)
 
