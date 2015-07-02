@@ -447,15 +447,12 @@ class MusicView(TreeView):
         self.request_song(highlight_item.get_song(), play=True)
 
     def get_next_fm(self):
-        if self.highlight_item:
-            if self.highlight_item in self.items:
-                current_index = self.items.index(self.highlight_item)
-                next_index = current_index + 1
-                if next_index > len(self.items) -1:
-                    return
-                highlight_item = self.items[next_index]
-            else:
-                highlight_item = self.items[0]
+        if self.highlight_item and self.highlight_item in self.items:
+            current_index = self.items.index(self.highlight_item)
+            next_index = current_index + 1
+            if next_index > len(self.items) -1:
+                return
+            highlight_item = self.items[next_index]
         else:
             highlight_item = self.items[0]
 
@@ -467,6 +464,7 @@ class MusicView(TreeView):
 
         if self.view_type == self.PERSONAL_FM_ITEM:
             self.get_pervious_fm()
+            return
 
         if self.highlight_item:
             if self.highlight_item in self.items:
@@ -494,15 +492,12 @@ class MusicView(TreeView):
         self.request_song(highlight_item.get_song(), play=True)
 
     def get_pervious_fm(self):
-        if self.highlight_item:
-            if self.highlight_item in self.items:
-                current_index = self.items.index(self.highlight_item)
-                next_index = current_index - 1
-                if next_index < 0:
-                    return
-                highlight_item = self.items[next_index]
-            else:
-                highlight_item = self.items[0]
+        if self.highlight_item and self.highlight_item in self.items:
+            current_index = self.items.index(self.highlight_item)
+            privious_index = current_index - 1
+            if privious_index < 0:
+                return
+            highlight_item = self.items[privious_index]
         else:
             highlight_item = self.items[0]
 
