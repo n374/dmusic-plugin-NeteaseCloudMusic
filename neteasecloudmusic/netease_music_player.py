@@ -45,9 +45,16 @@ class MusicPlayer(NetEase):
             utils.makedirs(save_path)
 
         try:
-            lrc = data['lrc']['lyric']
+            if data.get('nolyric', False):
+                lrc = "[00:00.00] %s - %s \n[99:59:99] 纯音乐, 请欣赏\n" % (name, artist)
+            else:
+                lrc = data['lrc']['lyric']
+                # 下面判断歌词是否为可滚动歌词
+                # FIXME: 需要找到更好的判断方式
+                if not lrc.lstrip().startswith('['):
+                    lrc = None
         except:
-            lrc = "[00:00.00] "+name+' - '+artist+"\n[99:59:99] No lyric found\n"
+            lrc = None
         # deepin music 好像不支持tlyric, tlyric应该是英文歌词的翻译
         # 最好能把英文和翻译合并起来
         #try:
