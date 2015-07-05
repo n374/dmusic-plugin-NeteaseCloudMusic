@@ -44,22 +44,18 @@ class MusicPlayer(NetEase):
         if not os.path.exists(save_path):
             utils.makedirs(save_path)
 
+        # 歌词内容有三种
+        # klyric  推测是类似卡拉OK样式的歌词，设定了每个词的停留时间
+        # lrc     普通动态歌词，设定了每句歌词的时间
+        # tlyric  翻译后的歌词
         try:
-            lrc = data['lrc']['lyric']
+            if data.get('nolyric', False):
+                lrc_content = "[00:00.00] %s - %s \n[99:59:99] 纯音乐, 请欣赏\n" % (name, artist)
+            else:
+                # 优先使用klyric
+                lrc_content = data.get('klyric', {}).get('lyric', False) or data.get('lrc', {}).get('lyric', False) or ("[00:00.00] %s - %s \n[99:59:99]\n" % (name, artist))
         except:
-            lrc = "[00:00.00] "+name+' - '+artist+"\n[99:59:99] No lyric found\n"
-        # deepin music 好像不支持tlyric, tlyric应该是英文歌词的翻译
-        # 最好能把英文和翻译合并起来
-        #try:
-            #tlyric = data['tlyric']['lyric']
-        #except:
-            #tlyric = None
-        #try:
-            #klyric = data['klyric']['lyric']
-        #except:
-            #klyric = None
-        #lrc_content = klyric or lrc or tlyric
-        lrc_content = lrc
+                lrc_content = "[00:00.00] %s - %s \n[99:59:99]\n" % (name, artist)
         lrc_path = os.path.join(save_path, str(sid)+'.lrc')
         if not os.path.exists(lrc_path) and lrc_content:
             with open(lrc_path, 'w') as f:
