@@ -36,6 +36,9 @@ import hashlib
 import utils
 from xdg_support import get_cache_file
 from config import config
+from Crypto.Cipher import AES
+import random
+import base64
 
 # list去重
 def uniq(arr):
@@ -60,25 +63,38 @@ class NetEase(object):
         }
         self.cookie_db_file = get_cache_file("neteasecloudmusic/cookie.db")
         self.cookies = self.load_cookie()
+        self.modulus = '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7'
+        self.nonce = '0CoJUm6Qyw8W8jud'
+        self.pubKey = '010001'
 
     def login_and_get_cookie(self, username, password):
         pattern = re.compile(r'^0\d{2,3}\d{7,8}$|^1[34578]\d{9}$')
         if (pattern.match(username)):
             print 'cellphone login'
-            action = 'https://music.163.com/api/login/cellphone'
+            action = 'http://music.163.com/weapi/login/cellphone'
             data = {
                 'phone': username,
                 'password': hashlib.md5(str(password)).hexdigest(),
                 'rememberLogin': 'true'
             }
         else:
-            action = 'http://music.163.com/api/login/'
+            action = 'http://music.163.com/weapi/login/'
             data = {
                 'username': username,
                 'password': hashlib.md5(str(password)).hexdigest(),
                 'rememberLogin': 'true'
             }
         s = requests.Session()
+        # 加密算法 http://kevinsfork.info/2015/07/23/nwmusicboxapi/
+        # 加密代码 https://github.com/darknessomi/musicbox/blob/master/NEMbox/api.py
+        text = json.dumps(data)
+        secKey = self.createSecretKey(16)
+        encText = self.aesEncrypt(self.aesEncrypt(text, self.nonce), secKey)
+        encSecKey = self.rsaEncrypt(secKey, self.pubKey, self.modulus)
+        data = {
+                'params': encText,
+                'encSecKey': encSecKey
+        }
         try:
             connection = s.post(
                 action,
@@ -146,20 +162,6 @@ class NetEase(object):
         connection.encoding = "UTF-8"
         connection = json.loads(connection.text)
         return connection
-
-    # 登录
-    def login(self, username, password):
-        action = 'http://music.163.com/api/login/'
-        data = {
-            'username': username,
-            'password': hashlib.md5( password ).hexdigest(),
-            'rememberLogin': 'true'
-        }
-        try:
-            return self.httpRequest('POST', action, data)
-        except:
-            print 'login failed'
-            return {'code': 501}
 
     # 用户歌单
     def user_playlist(self, uid, offset=0, limit=100):
@@ -486,3 +488,19 @@ class NetEase(object):
             temp = channel_info
 
         return temp
+
+    def aesEncrypt(self, text, secKey):
+        pad = 16 - len(text) % 16
+        text = text + pad * chr(pad)
+        encryptor = AES.new(secKey, 2, '0102030405060708')
+        ciphertext = encryptor.encrypt(text)
+        ciphertext = base64.b64encode(ciphertext)
+        return ciphertext
+
+    def rsaEncrypt(self, text, pubKey, modulus):
+        text = text[::-1]
+        rs = int(text.encode('hex'), 16)**int(pubKey, 16)%int(modulus, 16)
+        return format(rs, 'x').zfill(256)
+
+    def createSecretKey(self, size):
+        return (''.join(map(lambda xx: (hex(ord(xx))[2:]), os.urandom(size))))[0:16]

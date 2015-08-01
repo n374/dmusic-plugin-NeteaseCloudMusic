@@ -43,10 +43,11 @@ sudo apt-get install deepin-music-player
 
 安装完成后恢复原样
 
-- **安装Requests库**
+- **安装Requests库及pycrypto库**
 ```
 sudo apt-get install python-pip
 sudo pip install requests
+sudo pip install pycrypto
 ```
 或者参照[官方文档](http://docs.python-requests.org/en/latest/user/install/#install)
 
