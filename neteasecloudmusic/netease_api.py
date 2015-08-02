@@ -177,7 +177,7 @@ class NetEase(object):
         else:
             return []
 
-# 每日歌曲推荐 http://music.163.com/discover/recommend/taste
+    # 每日歌曲推荐 http://music.163.com/discover/recommend/taste
     def recommend_songlist(self, offset=0, limit=100):
         action = 'http://music.163.com/discover/recommend/taste'
         if self.uid != None:
@@ -190,19 +190,12 @@ class NetEase(object):
                     return []
                 # 去重
                 songids = uniq(songids)
-                result_list = self.songlist_to_searchlist(songids)
+                result_list = self.songs_detail(songids)
                 return result_list
             except:
                 return []
         else:
             return []
-
-    def songlist_to_searchlist(self, songlist):
-        para_dict = {'ids': '[' + ','.join(map(str, songlist)) + ']'}
-        action_song_detail = 'http://music.163.com/api/song/detail'
-        result_list =json.loads(requests.get(action_song_detail,
-                                             params = para_dict).content.decode('utf8'))['songs']
-        return result_list
 
     def get_lyric(self, sid):
         if sid:
