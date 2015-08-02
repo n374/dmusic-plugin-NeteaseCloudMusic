@@ -200,8 +200,6 @@ class NetEase(object):
     def songlist_to_searchlist(self, songlist):
         para_dict = {'ids': '[' + ','.join(map(str, songlist)) + ']'}
         action_song_detail = 'http://music.163.com/api/song/detail'
-        with open('/home/xiangru/Documents/Tools/deep.log', 'a') as f:
-            f.write('songlist2searchlist executed')
         result_list =json.loads(requests.get(action_song_detail,
                                              params = para_dict).content.decode('utf8'))['songs']
         return result_list
