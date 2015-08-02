@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#encoding: UTF-8
+#encoding: utf-8
 
 #CopyRight (c) 2014 vellow  &lt;<a
 #href="mailto:i@vellow.net">i@vellow.net</a>&gt;
@@ -35,6 +35,7 @@ import requests
 import hashlib
 import utils
 from xdg_support import get_cache_file
+
 from config import config
 from Crypto.Cipher import AES
 import random
@@ -176,6 +177,33 @@ class NetEase(object):
         else:
             return []
 
+# 每日歌曲推荐 http://music.163.com/discover/recommend/taste
+    def recommend_songlist(self, offset=0, limit=100):
+        action = 'http://music.163.com/discover/recommend/taste'
+        if self.uid != None:
+            try:
+                connection = requests.get(action, headers=self.header,
+                                          cookies= self.cookies,timeout=default_timeout)
+                connection.encoding = 'UTF-8'
+                songids = re.findall(r'/song\?id=(\d+)', connection.text)
+                if songids == []:
+                    return []
+                # 去重
+                songids = uniq(songids)
+                result_list = self.songlist_to_searchlist(songids)
+                return result_list
+            except:
+                return []
+        else:
+            return []
+
+    def songlist_to_searchlist(self, songlist):
+        para_dict = {'ids': '[' + ','.join(map(str, songlist)) + ']'}
+        action_song_detail = 'http://music.163.com/api/song/detail'
+        result_list =json.loads(requests.get(action_song_detail,
+                                             params = para_dict).content.decode('utf8'))['songs']
+        return result_list
+
     def get_lyric(self, sid):
         if sid:
             action = 'http://music.163.com/api/song/lyric?os=pc&id=' + str(sid) + '&lv=-1&tv=-1&kv=-1&cp=true'
@@ -293,6 +321,7 @@ class NetEase(object):
         except:
             print 'search failed'
             return []
+
 
     def subscribe_playlist(self, playlist_id):
         action = 'http://music.163.com/api/playlist/subscribe/?id=' + str(playlist_id) + '&csrf_token=' + self.cookies['__csrf']
