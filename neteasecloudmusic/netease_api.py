@@ -185,18 +185,12 @@ class NetEase(object):
                 connection = requests.get(action, headers=self.header,
                                           cookies= self.cookies,timeout=default_timeout)
                 connection.encoding = 'UTF-8'
-                # with open('/home/xiangru/Documents/Tools/deep.log', 'w') as f:
-                #     f.write(connection.text)
                 songids = re.findall(r'/song\?id=(\d+)', connection.text)
                 if songids == []:
                     return []
                 # 去重
                 songids = uniq(songids)
-                # with open('/home/xiangru/Documents/Tools/deep.log', 'w') as f:
-                #     f.write(str(songids))
                 result_list = self.songlist_to_searchlist(songids)
-                with open('/home/xiangru/Documents/Tools/deep.log', 'w') as f:
-                    f.write(str(result_list))
                 return result_list
             except:
                 return []
