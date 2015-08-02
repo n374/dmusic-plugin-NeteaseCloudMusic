@@ -45,7 +45,7 @@ class MusicBrowser(gtk.VBox):
         self.search_entry.set_size_request(438, 32)
 
         self.search_combobox = gtk.combo_box_new_text()
-        self.combobox_item = ['歌曲', '歌单']
+        self.combobox_item = ['歌曲', '歌单', '推荐']
         for item in self.combobox_item:
             self.search_combobox.append_text(item)
         self.search_combobox.set_active(0)
@@ -73,29 +73,43 @@ class MusicBrowser(gtk.VBox):
     def search(self, *kwargs):
         string = self.search_entry.get_text()
         index = self.search_combobox.get_active()
+        if index == 2:
+                switch_tab(self.result_box, self.song_list)
+                self.song_list.add_items([SearchSongItem(Song(song))
+                                          for song in
+                                          nplayer.recommend_songlist()],
+                                         clear_first=True)
         if string:
             if index == 0:
                 switch_tab(self.result_box, self.song_list)
                 self.song_list.add_items([SearchSongItem(Song(song)) for song in
                     nplayer.search(string)], clear_first=True)
-            else:
+            elif index == 1:
                 switch_tab(self.result_box, self.playlist_list)
                 self.playlist_list.add_items([PlaylistItem(playlist) for
                     playlist in nplayer.search(string, 1000)], clear_first=True)
 
     def change_search_type(self, obj):
-        string = self.search_entry.get_text()
-        if not string:
-            return
         index = self.search_combobox.get_active()
-        if index == 0:
-            switch_tab(self.result_box, self.song_list)
-            self.song_list.add_items([SearchSongItem(Song(song)) for song in
-                nplayer.search(string)], clear_first=True)
-        elif index == 1:
-            switch_tab(self.result_box, self.playlist_list)
-            self.playlist_list.add_items([PlaylistItem(playlist) for playlist in
-                nplayer.search(string, 1000)], clear_first=True)
+        if index == 2:
+                switch_tab(self.result_box, self.song_list)
+                self.song_list.add_items([SearchSongItem(Song(song))
+                                          for song in
+                                          nplayer.recommend_songlist()],
+                                         clear_first=True)
+        string = self.search_entry.get_text()
+        if string:
+            if index == 0:
+                switch_tab(self.result_box, self.song_list)
+                self.song_list.add_items([SearchSongItem(Song(song))
+                                          for song in nplayer.search(string)],
+                                         clear_first=True)
+            elif index == 1:
+                switch_tab(self.result_box, self.playlist_list)
+                self.playlist_list.add_items([PlaylistItem(playlist)
+                                              for playlist in
+                                              nplayer.search(string, 1000)],
+                                             clear_first=True)
 
     def single_click_item(self, widget, item, column, x, y):
         self.result_box.add(self.song_list)
