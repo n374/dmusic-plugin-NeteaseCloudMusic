@@ -220,6 +220,7 @@ class NetEase(object):
             item['#duration'] = item['duration']
             item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
             item['album_cover_url'] = item['album']['blurPicUrl']
+            item['album'] = item['album']['name']
         return tracks
 
     def personal_fm(self):
