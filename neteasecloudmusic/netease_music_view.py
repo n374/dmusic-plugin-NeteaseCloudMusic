@@ -248,24 +248,6 @@ class MusicView(TreeView):
         return ",".join([str(item.song['sid']) for item in items if
             item.song.get('sid', None)])
 
-    def get_add_online_list_menu(self, select_items):
-        category_items = [item for item in self.category_view.items if
-                item.list_type == self.PLAYLIST_TYPE]
-        if len(category_items) <= 0:
-            return None
-
-        songs = [item.song for item in select_items]
-        sids = self.get_sids(select_items)
-
-        def add_song_to_list(item, songs, sids):
-            item.add_songs(songs, pos=0)
-            pid = item.list_id
-            nplayer.add_list_song(pid, sids)
-
-        munu_items = [(None, item.title, add_song_to_list, item, songs, sids)
-                for item in category_items]
-        return Menu(menu_items)
-
     def on_music_view_delete_select_items(self, widget, items):
         if not items:
             return
