@@ -52,6 +52,12 @@ sudo pip install requests
 sudo pip install pycrypto
 ```
 
+对于默认使用Python 3的发行版比如Arch，请安装python2版本的库：
+```
+sudo pacman -Ss python2-pip
+sudo pip2 install requests
+sudo pip2 install pycrypto
+```
 
 - **安装网易云音乐插件**
 ```
