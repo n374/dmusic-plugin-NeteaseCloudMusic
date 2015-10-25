@@ -63,7 +63,7 @@ sudo pip2 install pycrypto
 ```
 git clone https://github.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic.git
 cd dmusic-plugin-NeteaseCloudMusic
-python install.py
+python2 install.py
 ```
 
 使用
