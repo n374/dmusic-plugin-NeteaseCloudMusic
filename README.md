@@ -37,7 +37,7 @@ sudo apt-add-repository ppa:noobslab/deepin-sc
 sudo apt-get update
 sudo apt-get install deepin-music-player
 ```
-这个源有段时间没有更新，因此Ubuntu 15.05可能无法安装。需要修改`/etc/apt/sources.list.d`文件夹下`noobslab-ubuntu-deepin-sc-vivid.list`文件，将其中的的`vivid`修改成`utopic`，然后
+这个源有段时间没有更新，因此Ubuntu 15.04可能无法安装。需要修改`/etc/apt/sources.list.d`文件夹下`noobslab-ubuntu-deepin-sc-vivid.list`文件，将其中的的`vivid`修改成`utopic`，然后
 ```
 sudo apt-get update
 sudo apt-get install deepin-music-player
