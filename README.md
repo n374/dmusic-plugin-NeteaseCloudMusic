@@ -5,6 +5,8 @@
 
 使用了[NetEaseMusicBox](https://github.com/bluetomlee/NetEase-MusicBox)中的网易云音乐[API](https://github.com/bluetomlee/NetEase-MusicBox/blob/master/src/api.py)
 
+非大陆用户可能无法播放音乐，请使用proxychains设置播放器代理或使用VPN
+
 
 特性
 --------
