@@ -178,24 +178,44 @@ class NetEase(object):
             return []
 
     # 每日歌曲推荐 http://music.163.com/discover/recommend/taste
-    def recommend_songlist(self, offset=0, limit=100):
-        action = 'http://music.163.com/discover/recommend/taste'
-        if self.uid != None:
-            try:
-                connection = requests.get(action, headers=self.header,
-                                          cookies= self.cookies,timeout=default_timeout)
-                connection.encoding = 'UTF-8'
-                songids = re.findall(r'/song\?id=(\d+)', connection.text)
-                if songids == []:
-                    return []
-                # 去重
-                songids = uniq(songids)
-                result_list = self.songs_detail(songids)
-                return result_list
-            except:
-                return []
-        else:
-            return []
+    def recommend_songlist(self):
+        # 参考自https://github.com/darknessomi/musicbox/blob/master/NEMbox/api.py
+        action = 'http://music.163.com/weapi/v1/discovery/recommend/songs?csrf_token='
+        csrf = ''
+        for cookie in self.cookies:
+            if cookie.name == "__csrf":
+                csrf = cookie.value
+        if csrf == '':
+            print 'need login?'
+            return false
+        data = {
+            "offset": 0,
+            "total": True,
+            "limit": 20,
+            "csrf_token": csrf
+        }
+        text = json.dumps(data)
+        secKey = self.createSecretKey(16)
+        encText = self.aesEncrypt(self.aesEncrypt(text, self.nonce), secKey)
+        encSecKey = self.rsaEncrypt(secKey, self.pubKey, self.modulus)
+        data = {
+                'encSecKey': encSecKey,
+                'params': encText
+        }
+        try:
+            connection = self.httpRequest(
+                'POST',
+                action,
+                query=data,
+                timeout=default_timeout
+            )
+            if connection['code'] != 200:
+                print 'get recommend_songlist failed - wrong code'
+                return false
+            return connection['recommend']
+        except:
+            print 'get recommend_songlist failed'
+            return None
 
     def get_lyric(self, sid):
         if sid:
