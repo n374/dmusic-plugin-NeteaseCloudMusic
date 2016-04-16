@@ -67,6 +67,8 @@ class NetEase(object):
         self.modulus = '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7'
         self.nonce = '0CoJUm6Qyw8W8jud'
         self.pubKey = '010001'
+        self.secKey = self.createSecretKey(16)
+        self.encSecKey = self.rsaEncrypt(self.secKey, self.pubKey, self.modulus)
 
     def login_and_get_cookie(self, username, password):
         pattern = re.compile(r'^0\d{2,3}\d{7,8}$|^1[34578]\d{9}$')
@@ -89,12 +91,10 @@ class NetEase(object):
         # 加密算法 http://kevinsfork.info/2015/07/23/nwmusicboxapi/
         # 加密代码 https://github.com/darknessomi/musicbox/blob/master/NEMbox/api.py
         text = json.dumps(data)
-        secKey = self.createSecretKey(16)
-        encText = self.aesEncrypt(self.aesEncrypt(text, self.nonce), secKey)
-        encSecKey = self.rsaEncrypt(secKey, self.pubKey, self.modulus)
+        encText = self.aesEncrypt(self.aesEncrypt(text, self.nonce), self.secKey)
         data = {
                 'params': encText,
-                'encSecKey': encSecKey
+                'encSecKey': self.encSecKey
         }
         try:
             connection = s.post(
@@ -195,11 +195,9 @@ class NetEase(object):
             "csrf_token": csrf
         }
         text = json.dumps(data)
-        secKey = self.createSecretKey(16)
-        encText = self.aesEncrypt(self.aesEncrypt(text, self.nonce), secKey)
-        encSecKey = self.rsaEncrypt(secKey, self.pubKey, self.modulus)
+        encText = self.aesEncrypt(self.aesEncrypt(text, self.nonce), self.secKey)
         data = {
-                'encSecKey': encSecKey,
+                'encSecKey': self.encSecKey,
                 'params': encText
         }
         try:
