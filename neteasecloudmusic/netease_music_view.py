@@ -279,9 +279,13 @@ class MusicView(TreeView):
                     os.unlink(file_path)
                 except:
                     pass
-            song = nplayer.get_better_quality_music(song)
+            url = nplayer.get_songs_url([song['sid']])[0]['url']
             nplayer.save_lyric(nplayer.get_lyric(song['sid']), song['sid'],
                     song['name'], song['artist'])
+            if not url:
+                self.get_next_song()
+                return
+            song['uri'] = url
             self.play_song(song, play=True)
 
     def pre_fetch_fm_songs(self):

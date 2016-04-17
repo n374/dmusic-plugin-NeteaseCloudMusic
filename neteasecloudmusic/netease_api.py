@@ -69,6 +69,7 @@ class NetEase(object):
         self.pubKey = '010001'
         self.secKey = self.createSecretKey(16)
         self.encSecKey = self.rsaEncrypt(self.secKey, self.pubKey, self.modulus)
+        self.session = requests.Session()
 
     def login_and_get_cookie(self, username, password):
         pattern = re.compile(r'^0\d{2,3}\d{7,8}$|^1[34578]\d{9}$')
@@ -87,7 +88,6 @@ class NetEase(object):
                 'password': hashlib.md5(str(password)).hexdigest(),
                 'rememberLogin': 'true'
             }
-        s = requests.Session()
         # 加密算法 http://kevinsfork.info/2015/07/23/nwmusicboxapi/
         # 加密代码 https://github.com/darknessomi/musicbox/blob/master/NEMbox/api.py
         text = json.dumps(data)
@@ -97,7 +97,7 @@ class NetEase(object):
                 'encSecKey': self.encSecKey
         }
         try:
-            connection = s.post(
+            connection = self.session.post(
                 action,
                 data=data,
                 headers=self.header,
@@ -106,9 +106,9 @@ class NetEase(object):
             connection.encoding = "UTF-8"
             connection = json.loads(connection.text)
             self.uid = connection['account']['id']
-            self.save_cookie(s.cookies)
-            self.cookies = s.cookies
-            return s.cookies
+            self.save_cookie(self.session.cookies)
+            self.cookies = self.session.cookies
+            return self.session.cookies
         except:
             print 'login failed'
             return None
@@ -213,6 +213,44 @@ class NetEase(object):
             return connection['recommend']
         except:
             print 'get recommend_songlist failed'
+            return None
+
+    def get_songs_url(self, sids, bit_rate=128000):
+        action = 'http://music.163.com/weapi/song/enhance/player/url?csrf_token='
+        csrf = ''
+        for cookie in self.cookies:
+            if cookie.name == "__csrf":
+                csrf = cookie.value
+        if csrf == '':
+            print 'need login?'
+            return false
+        action += csrf
+        data = {
+            "ids": sids,
+            "br": bit_rate,
+            "csrf_token": csrf
+        }
+        text = json.dumps(data)
+        encText = self.aesEncrypt(self.aesEncrypt(text, self.nonce), self.secKey)
+        data = {
+                'encSecKey': self.encSecKey,
+                'params': encText,
+        }
+        try:
+            connection = self.session.post(
+                action,
+                data=data,
+                headers=self.header,
+            )
+            if connection.status_code == 404:
+                print 'This song is not available'
+            if connection.status_code != 200:
+                print 'get_song_url failed - wrong code'
+                return false
+            result = json.loads(connection.content)
+            return result['data']
+        except:
+            print 'get_song_url failed'
             return None
 
     def get_lyric(self, sid):
