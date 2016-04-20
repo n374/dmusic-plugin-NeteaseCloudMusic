@@ -218,9 +218,12 @@ class NetEase(object):
     def get_songs_url(self, sids, bit_rate=128000):
         action = 'http://music.163.com/weapi/song/enhance/player/url?csrf_token='
         csrf = ''
-        for cookie in self.cookies:
-            if cookie.name == "__csrf":
-                csrf = cookie.value
+        if type(self.cookies == dict):
+            csrf = self.cookies['__csrf']
+        else:
+            for cookie in self.cookies:
+                if cookie.name == "__csrf":
+                    csrf = cookie.value
         if csrf == '':
             print 'need login?'
             return false
