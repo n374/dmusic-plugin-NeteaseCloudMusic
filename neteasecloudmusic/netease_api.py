@@ -165,7 +165,7 @@ class NetEase(object):
         return connection
 
     # 用户歌单
-    def user_playlist(self, uid, offset=0, limit=100):
+    def user_playlist(self, uid, offset=0, limit=500):
         if uid:
             action = 'http://music.163.com/api/user/playlist/?offset=' + str(offset) + '&limit=' + str(limit) + '&uid=' + str(uid)
             try:
