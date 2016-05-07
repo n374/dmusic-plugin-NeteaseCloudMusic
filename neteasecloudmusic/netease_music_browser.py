@@ -513,8 +513,9 @@ class SongView(TreeView):
         if current_item and select_items:
             selected_songs_id = [item.get_song()['id'] for item in select_items]
             # 子菜单 - 添加到创建的歌单
-            addto_submenu = [(None, _(key), self.add_to_list, selected_songs_id, self.CREATED_LISTS_DICT[key])
-                for key in self.CREATED_LISTS_DICT.keys()]
+            addto_submenu = [(None, _(gobject.markup_escape_text(key)),
+                self.add_to_list, selected_songs_id,
+                self.CREATED_LISTS_DICT[key]) for key in self.CREATED_LISTS_DICT.keys()]
             addto_submenu.insert(0,(None, _('播放列表'),
                 self.add_to_list, selected_songs_id, 0))
             addto_submenu = Menu(addto_submenu)
