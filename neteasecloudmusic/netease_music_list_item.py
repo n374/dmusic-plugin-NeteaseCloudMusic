@@ -3,6 +3,7 @@
 
 import pango
 import gtk
+import gobject
 from dtk.ui.draw import draw_pixbuf, draw_text
 from dtk.ui.treeview import TreeItem
 
@@ -218,6 +219,7 @@ class MusicListItem(TreeItem):
         else:
             text_color = app_theme.get_color("labelText").get_color()
 
+        self.title = gobject.markup_escape_text(self.title)
         draw_text(cr, self.title, rect.x, rect.y, rect.width, rect.height,
             text_size=10, text_color=text_color, alignment=pango.ALIGN_LEFT)
 
