@@ -93,6 +93,7 @@ class MusicListItem(TreeItem):
             self.title = list_data
         else:
             self.title = list_data.get("name", "")
+        self.title = gobject.markup_escape_text(self.title)
         self.data = list_data
         self.list_type= list_type
 
@@ -179,7 +180,7 @@ class MusicListItem(TreeItem):
             self.redraw_request_callback(self)
 
     def set_title(self, title):
-        self.title = title
+        self.title = gobject.markup_escape_text(title)
         self.emit_redraw_request()
 
     def render_title(self, cr, rect):
@@ -219,7 +220,6 @@ class MusicListItem(TreeItem):
         else:
             text_color = app_theme.get_color("labelText").get_color()
 
-        self.title = gobject.markup_escape_text(self.title)
         draw_text(cr, self.title, rect.x, rect.y, rect.width, rect.height,
             text_size=10, text_color=text_color, alignment=pango.ALIGN_LEFT)
 
