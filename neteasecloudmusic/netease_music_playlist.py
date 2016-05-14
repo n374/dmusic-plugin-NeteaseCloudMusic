@@ -41,46 +41,46 @@ class MusicPlaylist(gtk.VBox):
 
         # Set db file
         self.listen_db_file = get_cache_file("neteasecloudmusic/local_listen.db")
-        self.status_db_file = get_cache_file("neteasecloudmusic/status.db")
 
-        # Set default & collect list item
+        # Set playinglist and personal FM item
         self.playing_list_item = MusicListItem("播放列表",
                 MusicListItem.PLAYING_LIST_TYPE)
         self.personal_fm_item = MusicListItem("私人FM",
                 MusicListItem.PERSONAL_FM_ITEM)
 
-        # Set category list and connect click/right click
+        # Set category list to store playlist item
         self.category_list = CategoryView(enable_drag_drop=False,
                 enable_multiple_select=True)
         self.category_list.add_items([self.playing_list_item])
 
+        # Delete dtk "delete" key binding
         del self.category_list.keymap["Delete"]
+
         self.category_list.draw_mask = self.draw_category_list_mask
         self.category_list.set_size_request(CATEGROYLIST_WIDTH, -1)
+
         self.category_list.connect("single-click-item",
                 self.on_category_single_click)
         self.category_list.connect("right-press-items",
                 self.on_category_right_press)
-        #self.category_list.set_highlight_item(self.playing_list_item)
 
         # Set view_box
         self.view_box = gtk.VBox()
         self.view_box.connect("size-allocate",
                 self.on_viewbox_size_allocate)
-        #self.view_box.add(self.playing_list_item.list_widget)
 
+        # Add main paned and put category_list & view_box into it
         main_paned = HPaned(handle_color=app_theme.get_color("panedHandler"),
                 enable_drag=True)
         main_paned.pack1(self.category_list, True, True)
         main_paned.pack2(self.view_box, True, False)
 
-        """ Set events"""
+        #  Set events
         event_manager.connect("login-success", self.load_online_lists)
         event_manager.connect("relogin", self.relogin)
         event_manager.connect("add-songs-to-playing-list",
                 self.add_songs_to_playing_list)
-        event_manager.connect("save-playing-status",
-                self.save)
+        event_manager.connect("save-playing-status", self.save)
         event_manager.connect("favorite-list-refreshed",
                 self.favorite_list_refreshed)
         event_manager.connect("refresh-favorite-list",
@@ -114,6 +114,7 @@ class MusicPlaylist(gtk.VBox):
         self.playing_list_item.song_view.add_songs(songs, play=play)
         self.save()
 
+    # Not used
     def restore_status(self):
         try:
             target_item = self.current_playing_item
@@ -266,6 +267,7 @@ class MusicPlaylist(gtk.VBox):
             utils.save_db(None, self.listen_db_file)
             return
 
+    # Not used
     def del_listen_list(self, item):
         def del_list():
             if self.current_item == item:
@@ -284,25 +286,6 @@ class MusicPlaylist(gtk.VBox):
                 self.current_item.song_view.set_hide_columns(None)
             else:
                 self.current_item.song_view.set_hide_columns([1])
-
-    def on_event_collect_songs(self, obj, data):
-        self.collect_list_item.add_songs(data, pos=0)
-
-    def on_event_add_songs(self, obj, data):
-        self.add_play_songs(data)
-
-    def on_event_play_songs(self, obj, data):
-        self.add_play_songs(data, play=True)
-
-    def on_event_save_listen_lists(self, obj, data):
-        self.save()
-
-    #def add_play_songs(self, data, play=False):
-        #if self.current_item.list_type not in (MusicListItem.DEFAULT_TYPE,
-                #MusicListItem.LOCAL_TYPE):
-            #self.switch_view(self.default_list_item)
-
-        #self.current_item.add_songs(data, play=play)
 
     def refresh_online_lists(self, *kwargs):
         if self.category_list.highlight_item:
@@ -367,16 +350,7 @@ class MusicPlaylist(gtk.VBox):
             self.category_list.set_highlight_item(self.playing_list_item)
             self.switch_view(self.playing_list_item)
 
-    def del_online_list(self, item):
-        def nplayer_del_list():
-            nplayer_del_list(item.list_id)
-            if self.current_item == item:
-                self.switch_view(self.default_list_item)
-            self.category_list.delete_items([item])
-
-        ConfirmDialog("提示", "您确定要删除【%s】歌单吗？" % item.title,
-                confirm_callback=nplayer_del_list).show_all()
-
+    # Not used
     @login_required
     def new_online_list(self):
         def nplayer_new_list(name):
@@ -390,6 +364,7 @@ class MusicPlaylist(gtk.VBox):
         input_dialog = InputDialog("新建歌单", "", 300, 100, nplayer_new_list)
         input_dialog.show_all()
 
+    # Not used
     @post_gui
     def render_new_online_list(self, data, thread_id):
         if self.new_list_thread_id != thread_id:
@@ -397,6 +372,7 @@ class MusicPlaylist(gtk.VBox):
         item = MusicListItem(data, None, True)
         self.category_list.add_items([item])
 
+    # Not used
     def rename_online_list(self, item, is_online=True):
         def nplayer_rename_list(name):
             if name.strip():

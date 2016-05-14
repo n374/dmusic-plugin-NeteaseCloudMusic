@@ -16,7 +16,6 @@ from netease_events import event_manager
 
 from player import Player
 from widget.skin import app_theme
-from netease_music_view import CategoryView, MusicView
 from dtk.ui.treeview import TreeItem, TreeView
 from widget.ui_utils import (draw_single_mask, switch_tab,
                              draw_alpha_mask, render_item_text)
@@ -300,7 +299,6 @@ class SearchSongItem(TreeItem):
 
         TreeItem.__init__(self)
 
-        self.song_error = False
         self.update(song)
         self.height = 26
 
@@ -335,11 +333,6 @@ class SearchSongItem(TreeItem):
         (self.length_width, self.length_height) = get_content_size(self.length, DEFAULT_FONT_SIZE)
 
         if redraw:
-            self.emit_redraw_request()
-
-    def set_error(self):
-        if not self.song_error:
-            self.song_error = True
             self.emit_redraw_request()
 
     def clear_error(self):
@@ -480,10 +473,7 @@ class SongView(TreeView):
         self.connect("press-return", self.on_music_view_press_return)
         self.connect("right-press-items", self.on_music_view_right_press_items)
 
-        self.request_thread_id = 0
-        self.collect_thread_id = 0
         self.onlinelist_thread_id = 0
-        self.collect_page = 0
 
     @property
     def items(self):
@@ -558,18 +548,6 @@ class SongView(TreeView):
 
     def emit_add_signal(self):
         self.emit("begin-add-items")
-
-    def adjust_uri_expired(self, song):
-        expire_time = song.get("uri_expire_time", None)
-        duration = song.get("#duration", None)
-        fetch_time = song.get("fetch_time", None)
-        if not expire_time or not duration or not fetch_time or not song.get("uri", None):
-            return True
-        now = time.time()
-        past_time = now - fetch_time
-        if past_time > (expire_time - duration) / 1000 :
-            return True
-        return False
 
     def get_songs(self):
         songs = []

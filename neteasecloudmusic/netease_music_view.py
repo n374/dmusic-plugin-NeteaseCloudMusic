@@ -39,16 +39,26 @@ class CategoryView(TreeView):
     items = property(lambda self: self.visible_items)
 
 class MusicView(TreeView):
+    # 播放列表
     PLAYING_LIST_TYPE = 1
+    # 我喜欢的音乐
     FAVORITE_LIST_TYPE = 2
+    # 创建的歌单
     CREATED_LIST_TYPE = 3
+    # 收藏的歌单
     COLLECTED_LIST_TYPE = 4
+    # 登录窗口
     LOGIN_LIST_TYPE = 5
+    # 私人FM
     PERSONAL_FM_ITEM = 6
 
+    # 列表循环
     LIST_REPEAT = 1
+    # 单曲循环
     SINGLE_REPEAT = 2
+    # 顺序播放
     ORDER_PLAY = 3
+    # 随机播放
     RANDOMIZE = 4
 
     FAVORITE_SONGS = []
@@ -65,21 +75,15 @@ class MusicView(TreeView):
         TreeView.__init__(self, enable_drag_drop=False,
                 enable_multiple_select=True)
 
-        # view_type 为list类型
         self.connect("double-click-item", self.on_music_view_double_click)
         self.connect("press-return", self.on_music_view_press_return)
         self.connect("right-press-items", self.on_music_view_right_press_items)
-        #self.connect("delete-select-items",
-                #self.on_music_view_delete_select_items)
 
         self.db_file = get_cache_file("neteasecloudmusic/neteasecloudmusic.db")
         self.view_type = view_type
         self.view_data = data
 
-        self.request_thread_id = 0
-        self.collect_thread_id = 0
         self.onlinelist_thread_id = 0
-        self.collect_page = 0
 
         if self.view_type not in [self.PLAYING_LIST_TYPE, self.LOGIN_LIST_TYPE,
                 self.PERSONAL_FM_ITEM]:
@@ -248,10 +252,6 @@ class MusicView(TreeView):
         return ",".join([str(item.song['sid']) for item in items if
             item.song.get('sid', None)])
 
-    def on_music_view_delete_select_items(self, widget, items):
-        if not items:
-            return
-
     def clear_items(self):
         self.clear()
         event_manager.emit("save-playing-status")
@@ -304,18 +304,6 @@ class MusicView(TreeView):
                 else:
                     self.pre_fetch_fm_songs()
 
-    def adjust_uri_expired(self, song):
-        expire_time = song.get("uri_expire_time", None)
-        duration = song.get("#duration", None)
-        fetch_time = song.get("fetch_time", None)
-        if not expire_time or not duration or not fetch_time or not song.get("uri", None):
-            return True
-        now = time.time()
-        past_time = now - fetch_time
-        if past_time > (expire_time - duration) / 1000 :
-            return True
-        return False
-
     def play_song(self, song, play=False):
         if not song: return None
 
@@ -339,14 +327,6 @@ class MusicView(TreeView):
             event_manager.emit("save-playing-status")
         self.pre_fetch_fm_songs()
         return song
-
-    @post_gui
-    def render_play_song(self, song, play, thread_id):
-        if thread_id != self.request_thread_id:
-            return
-
-        song["fetch_time"] = time.time()
-        self.play_song(Song(song), play)
 
     def get_songs(self):
         songs = []
@@ -491,14 +471,6 @@ class MusicView(TreeView):
 
     def dump_songs(self):
         return [ song.get_dict() for song in self.get_songs() ]
-
-    @post_gui
-    def render_collect_songs(self, data, thread_id):
-        if self.collect_thread_id != thread_id:
-            return
-        if len(data) == 2:
-            songs, havemore = data
-            self.add_songs(songs)
 
     def load_onlinelist_songs(self, clear=True):
         if clear:
