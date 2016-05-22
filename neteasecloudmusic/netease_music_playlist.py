@@ -87,6 +87,8 @@ class MusicPlaylist(gtk.VBox):
                 self.refresh_favorite_list)
         event_manager.connect("refresh-online-list", self.refresh_online_list)
         event_manager.connect("refresh-online-lists", self.refresh_online_lists)
+        event_manager.connect("update-playlist-tooltip",
+                self.update_playlist_tooltip)
 
         # Load playlists
         self.online_thread_id = 0
@@ -190,6 +192,9 @@ class MusicPlaylist(gtk.VBox):
         self.playing_list_item.song_view.add_songs(
                 self.right_clicked_item.song_view.get_songs(), play=True)
         self.save()
+
+    def update_playlist_tooltip(self, widget, text):
+        self.category_list.set_tooltip_text(text)
 
     def unsubscribe_playlist(self, playlist_id):
         if nplayer.unsubscribe_playlist(playlist_id):

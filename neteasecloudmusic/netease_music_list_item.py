@@ -6,6 +6,7 @@ import gtk
 import gobject
 from dtk.ui.draw import draw_pixbuf, draw_text
 from dtk.ui.treeview import TreeItem
+from HTMLParser import HTMLParser
 
 from widget.skin import app_theme
 from widget.ui_utils import (draw_single_mask, draw_separator, switch_tab,
@@ -236,6 +237,8 @@ class MusicListItem(TreeItem):
         self.emit_redraw_request()
 
     def hover(self, column, offset_x, offset_y):
+        event_manager.emit("update-playlist-tooltip",
+                HTMLParser().unescape(self.title));
         self.is_hover = True
         self.emit_redraw_request()
 
