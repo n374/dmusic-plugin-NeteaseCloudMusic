@@ -10,6 +10,7 @@ import os
 from dtk.ui.treeview import TreeView
 from dtk.ui.threads import post_gui
 from dtk.ui.menu import Menu
+from HTMLParser import HTMLParser
 
 from widget.ui_utils import render_item_text, draw_single_mask, draw_alpha_mask
 from player import Player
@@ -78,6 +79,8 @@ class MusicView(TreeView):
         self.connect("double-click-item", self.on_music_view_double_click)
         self.connect("press-return", self.on_music_view_press_return)
         self.connect("right-press-items", self.on_music_view_right_press_items)
+        event_manager.connect("update-song-tooltip",
+                self.update_song_tooltip)
 
         self.db_file = get_cache_file("neteasecloudmusic/neteasecloudmusic.db")
         self.view_type = view_type
@@ -232,6 +235,9 @@ class MusicView(TreeView):
             self.delete_items([item for item in self.items
                 if item.get_song()['id'] in sids])
             event_manager.emit('save-playing-status')
+
+    def update_song_tooltip(self, widget, text):
+        self.set_tooltip_text(text)
 
     def fm_like(self, song, flag):
         if nplayer.fm_like(song['id'], flag):
@@ -548,6 +554,8 @@ class SongItem(TreeItem):
         self.add_time = song.get_str("#added")
         self.album = song.get_str("album")
 
+        self.tooltip_text = "曲名：" + self.title + "\n歌手：" + self.artist + "\n时长：" + self.length + "\n专辑：" + self.album
+
         # Calculate item size.
         self.title_padding_x = 15
         self.title_padding_y = 5
@@ -705,6 +713,8 @@ class SongItem(TreeItem):
         self.emit_redraw_request()
 
     def hover(self, column, offset_x, offset_y):
+        event_manager.emit("update-song-tooltip",
+                HTMLParser().unescape(self.tooltip_text))
         self.is_hover = True
         self.emit_redraw_request()
 
