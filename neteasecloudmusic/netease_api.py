@@ -166,15 +166,38 @@ class NetEase(object):
 
     # 用户歌单
     def user_playlist(self, uid, offset=0, limit=500):
-        if uid:
-            action = 'http://music.163.com/api/user/playlist/?offset=' + str(offset) + '&limit=' + str(limit) + '&uid=' + str(uid)
-            try:
-                data = self.httpRequest('GET', action)
-                return data['playlist']
-            except:
-                print "get user's playlist failed"
-                return []
-        else:
+        for cookie in self.cookies:
+            if cookie.name == "__csrf":
+                csrf = cookie.value
+        if csrf == '':
+            print 'need login?'
+            return false
+        action = "http://music.163.com/weapi/user/playlist?csrf_token="
+        data = {
+            "offset": 0,
+            "uid": uid,
+            "limit": limit,
+            "csrf_token": csrf
+        }
+        text = json.dumps(data)
+        encText = self.aesEncrypt(self.aesEncrypt(text, self.nonce), self.secKey)
+        data = {
+                'encSecKey': self.encSecKey,
+                'params': encText
+        }
+        try:
+            connection = self.httpRequest(
+                'POST',
+                action,
+                query=data,
+                timeout=default_timeout
+            )
+            if connection['code'] != 200:
+                print 'get user_playlist failed - wrong code'
+                return false
+            return connection['playlist']
+        except:
+            print "get user's playlist failed"
             return []
 
     # 每日歌曲推荐 http://music.163.com/discover/recommend/taste
