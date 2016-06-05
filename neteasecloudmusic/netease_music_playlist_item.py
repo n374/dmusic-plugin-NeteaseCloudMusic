@@ -310,6 +310,9 @@ class CategoryListItem(NodeItem):
     def get_column_widths(self):
         return (self.item_width,)
 
+    def single_click(self, column, offset_x, offset_y):
+        return self.double_click(column, offset_x, offset_y)
+
     def get_column_renders(self):
         return (self.render_title,)
 
@@ -342,6 +345,11 @@ class CategoryListItem(NodeItem):
         rect.width -= self.padding_x * 2
 
         if self.is_highlight:
+            pixbuf = self.press_pixbuf
+        else:
+            pixbuf = self.normal_pixbuf
+
+        if self.is_expand:
             pixbuf = self.press_pixbuf
         else:
             pixbuf = self.normal_pixbuf
