@@ -5,7 +5,7 @@ import pango
 import gtk
 import gobject
 from dtk.ui.draw import draw_pixbuf, draw_text
-from dtk.ui.treeview import TreeItem
+from dtk.ui.treeview import NodeItem
 from HTMLParser import HTMLParser
 
 from widget.skin import app_theme
@@ -71,7 +71,7 @@ class LoginBox(gtk.HBox):
         draw_alpha_mask(cr, rect.x, rect.y,
                 rect.width, rect.height, "layoutMiddle")
 
-class MusicListItem(TreeItem):
+class PlaylistItem(NodeItem):
     PLAYING_LIST_TYPE = 1
     FAVORITE_LIST_TYPE = 2
     CREATED_LIST_TYPE = 3
@@ -81,7 +81,7 @@ class MusicListItem(TreeItem):
 
     def __init__(self, list_data, list_type, is_online_list=False,
             has_separator=True):
-        TreeItem.__init__(self)
+        NodeItem.__init__(self)
 
         self.column_index = 0
         self.side_padding = 5
@@ -96,7 +96,6 @@ class MusicListItem(TreeItem):
             self.title = list_data.get("name", "")
         self.title = gobject.markup_escape_text(self.title)
         self.data = list_data
-        self.list_type= list_type
 
         if is_online_list:
             if self.data['specialType'] == 5:
@@ -105,21 +104,14 @@ class MusicListItem(TreeItem):
                 self.list_type = self.COLLECTED_LIST_TYPE
             else:
                 self.list_type = self.CREATED_LIST_TYPE
+        else:
+            self.list_type = list_type
 
         self.has_separator = has_separator
         self.separator_height = 4
         self.item_width = CATEGROYLIST_WIDTH
         self.item_height = 26 + self.separator_height if self.has_separator else 26
         self.init_pixbufs()
-
-        self.song_view = MusicView(data=self.data, view_type=self.list_type)
-        self.song_view.set_size_request(PLAYLIST_WIDTH, -1)
-
-        if self.list_type == self.LOGIN_LIST_TYPE:
-            self.login_box = LoginBox(self.login, self.login_with_sina_microblog_account)
-
-            event_manager.connect("login", self.login)
-            self.login_box.password_entry.connect('activate', self.login)
 
         self.main_box = gtk.VBox()
 
@@ -268,3 +260,129 @@ class MusicListItem(TreeItem):
     list_id = property(lambda self: self.song_view.list_id)
     current_song = property(lambda self: self.song_view.current_song)
     play_song = property(lambda self: self.song_view.request_song)
+
+class CategoryListItem(NodeItem):
+    # PLAYING_LIST_TYPE = 1
+    # FAVORITE_LIST_TYPE = 2
+    CREATED_LIST_TYPE = 3
+    COLLECTED_LIST_TYPE = 4
+    # LOGIN_LIST_TYPE = 5
+    # PERSONAL_FM_ITEM = 6
+
+    def __init__(self, list_data, list_type, is_online_list=False,
+            has_separator=True):
+        NodeItem.__init__(self)
+
+        self.column_index = 0
+        self.side_padding = 5
+        self.is_highlight = False
+        self.padding_y = 0
+        self.padding_x = 8
+
+        self.title = list_data
+        self.list_type = list_type
+
+        self.has_separator = has_separator
+        self.separator_height = 4
+        self.item_width = CATEGROYLIST_WIDTH
+        self.item_height = 26 + self.separator_height if self.has_separator else 26
+        self.init_pixbufs()
+
+        self.main_box = gtk.VBox()
+
+    def init_pixbufs(self):
+        if self.list_type == self.CREATED_LIST_TYPE:
+            normal_image_name = "created_list.png"
+            press_image_name = "created_list_press.png"
+        elif self.list_type == self.COLLECTED_LIST_TYPE:
+            normal_image_name = "collected_list.png"
+            press_image_name = "collected_list_press.png"
+
+        self.normal_pixbuf = gtk.gdk.pixbuf_new_from_file(
+                                            get_image(normal_image_name))
+        self.press_pixbuf = gtk.gdk.pixbuf_new_from_file(
+                                            get_image(press_image_name))
+        self.icon_width = self.normal_pixbuf.get_width()
+
+    def get_height(self):
+        return self.item_height
+
+    def get_column_widths(self):
+        return (self.item_width,)
+
+    def get_column_renders(self):
+        return (self.render_title,)
+
+    def emit_redraw_request(self):
+        if self.redraw_request_callback:
+            self.redraw_request_callback(self)
+
+    def set_title(self, title):
+        self.title = gobject.markup_escape_text(title)
+        self.emit_redraw_request()
+
+    def render_title(self, cr, rect):
+        # Draw select background.
+
+        rect.y += self.padding_y + 2
+        # draw separator
+        if self.has_separator:
+            draw_separator(cr, rect.x, rect.y, rect.width, 1)
+            rect.y += self.padding_y + self.separator_height - 2
+            rect.height -= self.separator_height
+
+        if self.is_highlight:
+            draw_single_mask(cr, rect.x+1, rect.y, rect.width-2, rect.height,
+                    "globalItemHighlight")
+        elif self.is_hover:
+            draw_single_mask(cr, rect.x+1, rect.y, rect.width-2, rect.height,
+                    "globalItemHover")
+
+        rect.x += self.padding_x
+        rect.width -= self.padding_x * 2
+
+        if self.is_highlight:
+            pixbuf = self.press_pixbuf
+        else:
+            pixbuf = self.normal_pixbuf
+
+        if pixbuf:
+            icon_y = rect.y + (rect.height - self.normal_pixbuf.get_height())/2
+
+            draw_pixbuf(cr, pixbuf, rect.x, icon_y)
+            rect.x += self.icon_width + self.padding_x
+            rect.width -= self.icon_width - self.padding_x
+
+        if self.is_highlight:
+            text_color = "#FFFFFF"
+        else:
+            text_color = app_theme.get_color("labelText").get_color()
+
+        draw_text(cr, self.title, rect.x, rect.y, rect.width, rect.height,
+            text_size=10, text_color=text_color, alignment=pango.ALIGN_LEFT)
+
+    def unselect(self):
+        self.is_select = False
+        self.emit_redraw_request()
+
+    def select(self):
+        self.is_select = True
+        self.emit_redraw_request()
+
+    def unhover(self, column, offset_x, offset_y):
+        self.is_hover = False
+        self.emit_redraw_request()
+
+    def hover(self, column, offset_x, offset_y):
+        event_manager.emit("update-playlist-tooltip",
+                HTMLParser().unescape(self.title));
+        self.is_hover = True
+        self.emit_redraw_request()
+
+    def highlight(self):
+        self.is_highlight = True
+        self.emit_redraw_request()
+
+    def unhighlight(self):
+        self.is_highlight = False
+        self.emit_redraw_request()

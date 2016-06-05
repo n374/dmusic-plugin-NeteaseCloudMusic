@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from netease_music_browser import MusicBrowser
-from netease_music_playlist import MusicPlaylist
+from netease_left_pannel import LeftPannel
 from nls import _
 from helper import Dispatcher, SignalCollector
 from widget.tab_box import ListTab
 
-music_list = MusicPlaylist()
+left_pannel = LeftPannel()
 music_browser = MusicBrowser()
-radio_list_tab = ListTab(_("网易云音乐"), music_list, music_browser)
+radio_list_tab = ListTab(_("网易云音乐"), left_pannel, music_browser)
 
 def enable(dmusic):
     Dispatcher.emit("add-source", radio_list_tab)

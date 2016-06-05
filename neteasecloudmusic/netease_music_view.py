@@ -29,12 +29,12 @@ from netease_music_player import neteasecloud_music_player as nplayer
 from netease_events import event_manager
 DEFAULT_FONT_SIZE = 8
 
-class CategoryView(TreeView):
+class PlaylistView(TreeView):
     def add_items(self, items, insert_pos=None, clear_first=False):
         for item in items:
             song_view = getattr(item, "song_view", None)
             if song_view:
-                setattr(song_view, "category_view", self)
+                setattr(song_view, "playlist_view", self)
         TreeView.add_items(self, items, insert_pos, clear_first)
 
     items = property(lambda self: self.visible_items)
