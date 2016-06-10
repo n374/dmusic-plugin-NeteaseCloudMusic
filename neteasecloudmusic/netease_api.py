@@ -279,6 +279,48 @@ class NetEase(object):
             print 'get_song_url failed'
             return None
 
+    def get_playlist_detail(self, playlist_id, offset=True, limit=500):
+        action = 'http://music.163.com/weapi/v3/playlist/detail?csrf_token='
+        csrf = ''
+        if type(self.cookies == dict):
+            csrf = self.cookies['__csrf']
+        else:
+            for cookie in self.cookies:
+                if cookie.name == "__csrf":
+                    csrf = cookie.value
+        if csrf == '':
+            print 'need login?'
+            return false
+        action += csrf
+        data = {
+                "id": playlist_id,
+                "offset": offset,
+                "total": True,
+                "limit": limit,
+                "n": 1000,
+                "csrf_token": csrf
+        }
+        text = json.dumps(data)
+        encText = self.aesEncrypt(self.aesEncrypt(text, self.nonce), self.secKey)
+        data = {
+                'encSecKey': self.encSecKey,
+                'params': encText,
+        }
+        try:
+            connection = self.session.post(
+                action,
+                data=data,
+                headers=self.header,
+            )
+            if connection.status_code != 200:
+                print 'get playlist detail failed - wrong code'
+                return false
+            result = json.loads(connection.content)
+            return result["playlist"]["tracks"]
+        except:
+            print 'get playlist detail failed'
+            return None
+
     def get_lyric(self, sid):
         if sid:
             action = 'http://music.163.com/api/song/lyric?os=pc&id=' + str(sid) + '&lv=-1&tv=-1&kv=-1&cp=true'
@@ -433,17 +475,6 @@ class NetEase(object):
             data = self.httpRequest('GET', action)
             return data['playlists']
         except:
-            return []
-
-    # 歌单详情
-    def playlist_detail(self, playlist_id):
-        action = 'http://music.163.com/api/playlist/detail?id=' + str(playlist_id)
-        try:
-            data = self.httpRequest('GET', action)
-            tracks = data['result']['tracks']
-            return self.handle_songs_info(tracks)
-        except:
-            print 'get playlist_detail failed, playlist_id:', playlist_id
             return []
 
     # 热门歌手 http://music.163.com/#/discover/artist/
