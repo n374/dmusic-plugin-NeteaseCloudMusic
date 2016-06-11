@@ -33,13 +33,16 @@ import os
 import json
 import requests
 import hashlib
-import utils
-from xdg_support import get_cache_file
 
-from config import config
 from Crypto.Cipher import AES
 import random
 import base64
+
+try:
+    from xdg_support import get_cache_file
+    import utils
+except:
+    print "will not load/save cookie db files"
 
 # list去重
 def uniq(arr):
@@ -122,7 +125,9 @@ class NetEase(object):
             print 'get uid failed'
             return None
 
-    def get_user_detail(self, uid):
+    def get_user_detail(self, uid=None):
+        if not uid:
+            uid = self.get_uid()
         action = 'http://music.163.com/api/user/detail/'+str(uid)+'?userId='+str(uid)+'&all=true'
         try:
             data = self.httpRequest('GET', action)
@@ -133,16 +138,6 @@ class NetEase(object):
                 return None
         except:
             print "get_user_detail failed"
-            return None
-
-    def save_cookie(self, cookie=None):
-        utils.save_db(cookie, self.cookie_db_file)
-
-    def load_cookie(self):
-        try:
-            return utils.load_db(self.cookie_db_file)
-        except:
-            print 'load cookie failed'
             return None
 
     def httpRequest(self, method, action, query=None, urlencoded=None, callback=None, timeout=None):
@@ -164,8 +159,24 @@ class NetEase(object):
         connection = json.loads(connection.text)
         return connection
 
+    def save_cookie(self, cookie=None):
+        try:
+            utils.save_db(cookie, self.cookie_db_file)
+        except:
+            print 'save cookie failed'
+
+    def load_cookie(self):
+        try:
+            return utils.load_db(self.cookie_db_file)
+        except:
+            print 'load cookie failed'
+            return None
+
     # 用户歌单
-    def user_playlist(self, uid, offset=0, limit=500):
+    def get_user_playlist(self, uid=None, offset=0, limit=500):
+        if not uid:
+            uid = self.get_uid()
+        print self.cookies
         for cookie in self.cookies:
             if cookie.name == "__csrf":
                 csrf = cookie.value
@@ -193,7 +204,7 @@ class NetEase(object):
                 timeout=default_timeout
             )
             if connection['code'] != 200:
-                print 'get user_playlist failed - wrong code'
+                print 'get_user_playlist failed - wrong code'
                 return false
             return connection['playlist']
         except:
@@ -332,20 +343,6 @@ class NetEase(object):
                 return []
         else:
             return None
-
-    def handle_songs_info(self, tracks):
-        save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
-        for item in tracks:
-            item['sid'] = item['id']
-            item['title'] = item['name']
-            item['uri'] = item['mp3Url']
-            item['artist'] = ','.join([artist['name'] for artist in
-                item['artists']])
-            item['#duration'] = item['duration']
-            item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
-            item['album_cover_url'] = item['album']['blurPicUrl']
-            item['album'] = item['album']['name']
-        return tracks
 
     def personal_fm(self):
         action = 'http://music.163.com/api/radio/get'
