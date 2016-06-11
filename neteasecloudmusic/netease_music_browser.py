@@ -11,6 +11,7 @@ from deepin_utils.net import is_network_connected
 from netease_music_player import neteasecloud_music_player, player_interface
 from netease_music_player import neteasecloud_music_player as nplayer
 from netease_music_tools import get_cookie_file
+from netease_music_view import music_view
 
 from netease_events import event_manager
 
@@ -36,82 +37,8 @@ class MusicBrowser(gtk.VBox):
         for anything in search_entry.get_children():
             search_entry.remove(anything)
 
-        self.search_box = gtk.HBox(False)
-        self.result_box = gtk.HBox(False)
-
-        self.search_entry = gtk.Entry()
-        self.search_entry.connect('activate', self.search)
-        self.search_entry.set_size_request(438, 32)
-
-        self.search_combobox = gtk.combo_box_new_text()
-        self.combobox_item = ['歌曲', '歌单', '推荐']
-        for item in self.combobox_item:
-            self.search_combobox.append_text(item)
-        self.search_combobox.set_active(0)
-        self.search_combobox.set_size_request(-1, 32)
-        self.search_combobox.connect('changed', self.change_search_type)
-
-        self.search_button = gtk.Button("Search")
-        self.search_button.connect('pressed', self.search)
-        self.search_button.set_size_request(-1, 32)
-
-        self.song_list = SongView()
-        self.playlist_list = PlaylistView(enable_multiple_select=False)
-        #self.playlist_list.connect('single-click-item', self.single_click_item)
-
-        self.search_box.pack_start(self.search_combobox, False, False)
-        self.search_box.pack_start(self.search_entry, False, False)
-        self.search_box.pack_end(self.search_button, False, False)
-        self.result_box.pack_start(self.playlist_list)
-        self.result_box.pack_start(self.song_list)
-
-        self.pack_start(self.search_box, False, False, 0)
-        self.pack_end(self.result_box)
+        self.add(music_view)
         self.show_all()
-
-    def search(self, *kwargs):
-        string = self.search_entry.get_text()
-        index = self.search_combobox.get_active()
-        if index == 2:
-                switch_tab(self.result_box, self.song_list)
-                self.song_list.add_items([SearchSongItem(Song(song))
-                                          for song in
-                                          nplayer.recommend_songlist()],
-                                         clear_first=True)
-        if string:
-            if index == 0:
-                switch_tab(self.result_box, self.song_list)
-                self.song_list.add_items([SearchSongItem(Song(song)) for song in
-                    nplayer.search(string)], clear_first=True)
-            elif index == 1:
-                switch_tab(self.result_box, self.playlist_list)
-                self.playlist_list.add_items([PlaylistItem(playlist) for
-                    playlist in nplayer.search(string, 1000)], clear_first=True)
-
-    def change_search_type(self, obj):
-        index = self.search_combobox.get_active()
-        if index == 2:
-                switch_tab(self.result_box, self.song_list)
-                self.song_list.add_items([SearchSongItem(Song(song))
-                                          for song in
-                                          nplayer.recommend_songlist()],
-                                         clear_first=True)
-        string = self.search_entry.get_text()
-        if string:
-            if index == 0:
-                switch_tab(self.result_box, self.song_list)
-                self.song_list.add_items([SearchSongItem(Song(song))
-                                          for song in nplayer.search(string)],
-                                         clear_first=True)
-            elif index == 1:
-                switch_tab(self.result_box, self.playlist_list)
-                self.playlist_list.add_items([PlaylistItem(playlist)
-                                              for playlist in
-                                              nplayer.search(string, 1000)],
-                                             clear_first=True)
-
-    def single_click_item(self, widget, item, column, x, y):
-        self.result_box.add(self.song_list)
 
 class PlaylistItem(TreeItem):
     def __init__(self, data):

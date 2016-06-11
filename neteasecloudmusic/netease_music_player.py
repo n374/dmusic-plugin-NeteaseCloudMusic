@@ -91,11 +91,25 @@ class MusicPlayer(NetEase):
 
     def Playlists(self):
         return {item['id']:item['name'] for item in
-                NetEase().user_playlist(self.uid, offset=0)}
+                NetEase().get_user_playlist(self.uid, offset=0)}
 
     def AddSongs(self, songs):
         if songs:
             event_manager.emit("add-songs", songs)
+
+    def handle_songs_info(self, tracks):
+        save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
+        for item in tracks:
+            item['sid'] = item['id']
+            item['title'] = item['name']
+            item['uri'] = item['mp3Url']
+            item['artist'] = ','.join([artist['name'] for artist in
+                item['artists']])
+            item['#duration'] = item['duration']
+            item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
+            item['album_cover_url'] = item['album']['blurPicUrl']
+            item['album'] = item['album']['name']
+        return tracks
 
     def PlaySongs(self, songs):
         if songs:

@@ -3,9 +3,11 @@
 
 import pango
 import gtk
+import copy
 import gobject
 from dtk.ui.draw import draw_pixbuf, draw_text
 from dtk.ui.treeview import NodeItem
+from dtk.ui.threads import post_gui
 from HTMLParser import HTMLParser
 
 from widget.skin import app_theme
@@ -17,10 +19,11 @@ from widget.ui_utils import (draw_single_mask, draw_separator, switch_tab,
 import utils
 from widget.ui import ComplexButton
 from constant import PLAYLIST_WIDTH, CATEGROYLIST_WIDTH
-from netease_music_view import MusicView, nplayer
+from netease_music_view import nplayer
 from netease_music_tools import get_image
 from netease_events import event_manager
 from netease_music_browser import LoginDialog
+from netease_music_view import music_view
 
 class LoginButton(ComplexButton):
     def __init__(self, title, callback=None):
@@ -107,6 +110,8 @@ class PlaylistItem(NodeItem):
         else:
             self.list_type = list_type
 
+        self.onlinelist_thread_id = 0
+
         self.has_separator = has_separator
         self.separator_height = 4
         self.item_width = CATEGROYLIST_WIDTH
@@ -125,9 +130,6 @@ class PlaylistItem(NodeItem):
         utils.ThreadFetch(
             fetch_funcs=(nplayer.login_and_get_cookie, (username,password)),
             success_funcs=(self.login_success, ())).start()
-
-    def login_success(self, args, *kwargs):
-        event_manager.emit('login-success')
 
     def init_pixbufs(self):
         if self.list_type == self.PLAYING_LIST_TYPE:
@@ -158,6 +160,9 @@ class PlaylistItem(NodeItem):
         self.press_pixbuf = gtk.gdk.pixbuf_new_from_file(
                                             get_image(press_image_name))
         self.icon_width = self.normal_pixbuf.get_width()
+
+    def single_click(self, column, offset_x, offset_y):
+        self.load_onlinelist_songs()
 
     def get_height(self):
         return self.item_height
@@ -242,10 +247,23 @@ class PlaylistItem(NodeItem):
         self.is_highlight = False
         self.emit_redraw_request()
 
+    def load_onlinelist_songs(self):
+        if not nplayer.is_login:
+            return
+
+        playlist_id = self.data['id']
+
+        music_view.online_thread_id += 1
+        thread_id = copy.deepcopy(music_view.online_thread_id)
+        utils.ThreadFetch(
+            fetch_funcs=(nplayer.get_playlist_detail, (playlist_id,)),
+            success_funcs=(music_view.list_songs, (thread_id,))
+            ).start()
+
     @property
     def list_widget(self):
         switch_tab(self.main_box, self.song_view)
-        if not nplayer.is_login and self.list_type == MusicView.LOGIN_LIST_TYPE:
+        if not nplayer.is_login and self.list_type == self.LOGIN_LIST_TYPE:
             switch_tab(self.main_box, self.login_box)
 
         return self.main_box

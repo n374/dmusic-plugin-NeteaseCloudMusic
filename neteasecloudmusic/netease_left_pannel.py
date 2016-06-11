@@ -12,12 +12,13 @@ from song import Song
 from player import Player
 from dtk.ui.threads import post_gui
 from dtk.ui.treeview import IconTextItem
+from dtk.ui.treeview import TreeView
 from widget.skin import app_theme
 from constant import CATEGROYLIST_WIDTH, HIDE_PLAYLIST_WIDTH
 import utils
 
 from netease_events import event_manager
-from netease_music_view import PlaylistView
+from netease_music_view import music_view
 from netease_music_playlist_item import PlaylistItem, CategoryListItem
 from netease_music_player import neteasecloud_music_player as nplayer
 
@@ -50,6 +51,7 @@ class LeftPannel(gtk.VBox):
         self.playlist_view.draw_mask = self.draw_playlist_list_mask
         self.playlist_view.set_size_request(CATEGROYLIST_WIDTH, -1)
 
+        self.music_view = music_view
         # self.playlist_view.connect("single-click-item",
                 # self.playing_list_item.expand)
 
@@ -79,7 +81,7 @@ class LeftPannel(gtk.VBox):
         self.load_playlist_id += 1
         thread_id = copy.deepcopy(self.load_playlist_id)
         utils.ThreadFetch(
-                fetch_funcs=(nplayer.user_playlist, (nplayer.get_uid(),)),
+                fetch_funcs=(nplayer.get_user_playlist, (nplayer.get_uid(),)),
                 success_funcs=(self.render_online_lists, (thread_id,))
                 ).start()
         pass
@@ -105,3 +107,15 @@ class LeftPannel(gtk.VBox):
                 item.list_type == PlaylistItem.CREATED_LIST_TYPE])
             self.collected_list_item.add_items([item for item in items if
                 item.list_type == PlaylistItem.COLLECTED_LIST_TYPE])
+
+
+class PlaylistView(TreeView):
+    def add_items(self, items, insert_pos=None, clear_first=False):
+        for item in items:
+            song_view = getattr(item, "song_view", None)
+            if song_view:
+                setattr(song_view, "playlist_view", self)
+        TreeView.add_items(self, items, insert_pos, clear_first)
+
+    items = property(lambda self: self.visible_items)
+
