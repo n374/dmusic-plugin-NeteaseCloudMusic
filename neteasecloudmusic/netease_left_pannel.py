@@ -104,6 +104,8 @@ class LeftPannel(gtk.VBox):
         if len(playlists) > 0:
             items = [PlaylistItem(data, None, True, False) for data in playlists]
             self.created_list_item.add_items([item for item in items if
+                item.list_type == PlaylistItem.FAVORITE_LIST_TYPE])
+            self.created_list_item.add_items([item for item in items if
                 item.list_type == PlaylistItem.CREATED_LIST_TYPE])
             self.collected_list_item.add_items([item for item in items if
                 item.list_type == PlaylistItem.COLLECTED_LIST_TYPE])

@@ -5,8 +5,10 @@ import pango
 from dtk.ui.utils import get_content_size
 from dtk.ui.treeview import TreeItem
 from widget.ui_utils import render_item_text, draw_single_mask
+from HTMLParser import HTMLParser
 
 from netease_music_song import Song
+from netease_events import event_manager
 
 DEFAULT_FONT_SIZE = 8
 
