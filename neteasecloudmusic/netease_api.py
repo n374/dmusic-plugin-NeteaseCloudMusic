@@ -65,7 +65,10 @@ class NetEase(object):
             'Referer': 'http://music.163.com/search/',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36'
         }
-        self.cookie_db_file = get_cache_file("neteasecloudmusic/cookie.db")
+        try:
+            self.cookie_db_file = get_cache_file("neteasecloudmusic/cookie.db")
+        except Exception as e:
+            pass
         self.cookies = self.load_cookie()
         self.modulus = '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7'
         self.nonce = '0CoJUm6Qyw8W8jud'
