@@ -13,6 +13,7 @@ class Song(object):
         self.album_name = data["al"]["name"]
         self.album_pic = data["al"]["picUrl"]
 
+        self.duration = data['dt']
         self.length = str(data["dt"]/60000) + "分" \
                 + str((data["dt"]%60000)/1000) + "秒"
 

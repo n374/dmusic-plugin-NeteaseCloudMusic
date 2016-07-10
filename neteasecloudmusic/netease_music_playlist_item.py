@@ -277,21 +277,94 @@ class PlaylistItem(NodeItem):
     refrush = property(lambda self: self.song_view.refrush)
     list_id = property(lambda self: self.song_view.list_id)
     current_song = property(lambda self: self.song_view.current_song)
-    play_song = property(lambda self: self.song_view.request_song)
 
 class PlayingListItem(PlaylistItem):
     def __init__(self, title, list_type):
         super(PlayingListItem, self).__init__(title, list_type,
                 is_online_list=False, has_separator=True)
+        self.list_type = list_type
         self.songs = []
+        # Current playing song
+        self.playing_song = None
+
+    @property
+    def playback_mode(self):
+        return config.get("setting", "loop_mode")
 
     def single_click(self, column, offset_x, offset_y):
         self.list_songs()
+
+    def get_next_song(self, maunal=False):
+        if len(self.songs) <= 0:
+            return
+
+        if self.list_type == MusicView.PERSONAL_FM_ITEM:
+            playback_mode = 'order_mode'
+        else:
+            playback_mode = self.playback_mode
+
+        if self.playing_song:
+            if self.playing_song in self.songs:
+                current_index = self.songs.index(self.playing_song)
+                if playback_mode == 'list_mode':
+                    next_index = current_index + 1;
+                    if next_index > len(self.songs) - 1:
+                        next_index = 0
+                elif playback_mode == "single_mode":
+                    next_index = current_index
+                elif playback_mode == 'order_mode':
+                    next_index = current_index + 1
+                    if next_index > len(self.songs) - 1:
+                        return
+                elif playback_mode == 'random_mode':
+                    next_index = random.choice(range(0, current_index)
+                            + range(current_index+1, len(self.songs)))
+                else:
+                    next_index = 0
+                playing_song = self.songs[next_index]
+            else:
+                playing_song = self.songs[0]
+        else:
+            playing_song = self.songs[0]
+        self.request_song(playing_song, play=True)
+
+    def get_previous_song(self):
+        if len(self.songs) <= 0:
+            return
+        if self.list_type == MusicView.PERSONAL_FM_ITEM:
+            playback_mode = 'order_mode'
+        else:
+            playback_mode = self.playback_mode
+
+        if elf.playing_song:
+            if self.playing_song in self.songs:
+                current_index = self.songs.index(self.playing_song)
+                if playback_mode == 'list_mode':
+                    previous_index = current_index - 1
+                    if previous_index < 0:
+                        previous_index = len(self.songs) - 1
+                elif playback_mode == 'single_mode':
+                    previous_index = current_index
+                elif playback_mode == 'order_mode':
+                    previous_index = current_index - 1
+                elif playback_mode == 'random_mode':
+                    previous_index = random.choice(range(0, current_index)
+                            + range(current_index+1, len(self.songs)))
+                else:
+                    previous_index = 0
+                playing_song = self.songs[previous_index]
+            else:
+                playing_song = self.songs[0]
+        else:
+            playing_song = self.songs[0]
+            self.request_song(playing_song, play=True)
+
 
     def add_songs(self, songs):
         songs = [song for song in songs if song.song_id not in
                 [exists_song.song_id for exists_song in self.songs]]
         self.songs.extend(songs)
+        event_manager.emit("save")
         if music_view.showing_item is self:
             self.list_songs
 

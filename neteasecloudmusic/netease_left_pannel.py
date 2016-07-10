@@ -52,9 +52,8 @@ class LeftPannel(gtk.VBox):
         self.playlist_view.set_size_request(CATEGROYLIST_WIDTH, -1)
 
         self.music_view = music_view
-        # self.playlist_view.connect("single-click-item",
-                # self.playing_list_item.expand)
         event_manager.connect("add-and-play", self.add_to_playlinglist_and_play)
+        event_manager.connect("save", self.save)
 
         self.load_playlist_id = 0
 
@@ -75,21 +74,21 @@ class LeftPannel(gtk.VBox):
         self.playlist_view.set_highlight_item(item)
         switch_tab(self.view_box, item.list_widget)
 
-    def add_to_playlinglist_and_play(self, obj, songslist, play=False):
-        songs = songslist[0]
+    def add_to_playlinglist_and_play(self, obj, args):
+        songs = args[0]
         self.playing_list_item.add_songs(songs)
-        if play:
-            self.playing_list_item.play_song(songs)
+        if args[1]:
+            nplayer.play_song(songs[0], True)
 
     def save(self, *args):
-        if Player.get_source().showing_list_type == \
+        return
+        if not Player.get_source():
+            current_playing_item = None;
+        elif Player.get_source().showing_list_type == \
                 music_view.PLAYING_LIST_TYPE:
             current_playing_item = 'playing_list'
-        elif Player.get_source().showing_list_type == \
-                music_view.PERSONAL_FM_ITEM:
-            current_playing_item = 'personal_fm'
         else:
-            current_playing_item = None
+            current_playing_item = 'personal_fm'
 
         playing_list_songs = self.playing_list_item.songs
         try:

@@ -12,8 +12,10 @@ except ImportError:
     import json
 
 from xdg_support import get_cache_file
+from song import Song as deepin_Song
 
 import utils
+from player import Player
 from netease_api import NetEase
 
 try:
@@ -97,19 +99,37 @@ class MusicPlayer(NetEase):
         if songs:
             event_manager.emit("add-songs", songs)
 
-    def handle_songs_info(self, tracks):
+    def handle_songs_info(self, songs):
         save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
-        for item in tracks:
-            item['sid'] = item['id']
-            item['title'] = item['name']
-            item['uri'] = item['mp3Url']
-            item['artist'] = ','.join([artist['name'] for artist in
-                item['artists']])
-            item['#duration'] = item['duration']
-            item['location_lrc'] = os.path.join(save_path, str(item['id'])+'.lrc')
-            item['album_cover_url'] = item['album']['blurPicUrl']
-            item['album'] = item['album']['name']
-        return tracks
+        handled_songs = []
+        for song in songs:
+            url = self.get_songs_url([song.song_id])[0]['url']
+            if not url:
+                self.get_next_song()
+                return
+            # Conver to deepin_Song so deepin music player can get info
+            self.save_lyric(self.get_lyric(song.song_id), song.song_id,
+                    song.song_name, song.artist_names)
+            song_dict = {}
+            song_dict['sid'] = song.song_id
+            song_dict['artist'] = song.artist_names
+            song_dict['location_lrc'] = os.path.join(save_path, str(song.song_id)+'.lrc')
+            song_dict['uri'] = url
+            song_dict['title'] = song.song_name
+            song_dict['album'] = song.album_name
+            song_dict['album_cover_url'] = song.album_pic
+            song_dict['#duration'] = song.duration
+            song_dict['song_type'] = 'unknown'
+            handled_songs.append(deepin_Song(song_dict))
+        return handled_songs
+
+    def play_song(self, song, play=False):
+        if not song:
+            return None
+
+        Player.play_new(self.handle_songs_info([song])[0])
+
+        event_manager.emit("save")
 
     def PlaySongs(self, songs):
         if songs:
