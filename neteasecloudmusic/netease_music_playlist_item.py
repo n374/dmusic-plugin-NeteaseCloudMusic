@@ -289,6 +289,8 @@ class PlayingListItem(PlaylistItem):
         self.list_songs()
 
     def add_songs(self, songs):
+        songs = [song for song in songs if song.song_id not in
+                [exists_song.song_id for exists_song in self.songs]]
         self.songs.extend(songs)
         if music_view.showing_item is self:
             self.list_songs

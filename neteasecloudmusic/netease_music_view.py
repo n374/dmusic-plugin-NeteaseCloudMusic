@@ -188,11 +188,8 @@ class MusicView(TreeView):
         return song
 
     def get_songs(self):
-        songs = []
         self.update_item_index()
-        for song_item in self.items:
-            songs.append(song_item.get_song())
-        return songs
+        return [item.get_song() for item in self.items]
 
     def add_fm(self, songs, pos=None, sort=False, play=False):
         song_items = [SongItem(song) for song in songs]
