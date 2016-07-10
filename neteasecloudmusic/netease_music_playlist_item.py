@@ -257,7 +257,7 @@ class PlaylistItem(NodeItem):
         thread_id = copy.deepcopy(music_view.online_thread_id)
         utils.ThreadFetch(
             fetch_funcs=(nplayer.get_playlist_detail, (playlist_id,)),
-            success_funcs=(music_view.list_songs, (thread_id,))
+            success_funcs=(music_view.list_songs, (self, thread_id,))
             ).start()
 
     @property
@@ -278,6 +278,25 @@ class PlaylistItem(NodeItem):
     list_id = property(lambda self: self.song_view.list_id)
     current_song = property(lambda self: self.song_view.current_song)
     play_song = property(lambda self: self.song_view.request_song)
+
+class PlayingListItem(PlaylistItem):
+    def __init__(self, title, list_type):
+        super(PlayingListItem, self).__init__(title, list_type,
+                is_online_list=False, has_separator=True)
+        self.songs = []
+
+    def single_click(self, column, offset_x, offset_y):
+        self.list_songs()
+
+    def add_songs(self, songs):
+        self.songs.extend(songs)
+        if music_view.showing_item is self:
+            self.list_songs
+
+    def list_songs(self):
+        music_view.online_thread_id += 1
+        thread_id = copy.deepcopy(music_view.online_thread_id)
+        music_view.list_songs(self.songs, self, thread_id)
 
 class CategoryListItem(NodeItem):
     # PLAYING_LIST_TYPE = 1

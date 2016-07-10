@@ -19,7 +19,7 @@ import utils
 
 from netease_events import event_manager
 from netease_music_view import music_view
-from netease_music_playlist_item import PlaylistItem, CategoryListItem
+from netease_music_playlist_item import PlaylistItem, CategoryListItem, PlayingListItem
 from netease_music_player import neteasecloud_music_player as nplayer
 
 class LeftPannel(gtk.VBox):
@@ -30,9 +30,9 @@ class LeftPannel(gtk.VBox):
         self.listen_db_file = get_cache_file("neteasecloudmusic/local_listen.db")
 
         # Set playinglist and personal FM item
-        self.playing_list_item = PlaylistItem('播放列表',
+        self.playing_list_item = PlayingListItem('播放列表',
                 PlaylistItem.PLAYING_LIST_TYPE)
-        self.personal_fm_item = PlaylistItem("私人FM",
+        self.personal_fm_item = PlayingListItem("私人FM",
                 PlaylistItem.PERSONAL_FM_ITEM)
         self.created_list_item = CategoryListItem("创建的歌单",
                 CategoryListItem.CREATED_LIST_TYPE)
@@ -74,7 +74,56 @@ class LeftPannel(gtk.VBox):
         self.playlist_view.set_highlight_item(item)
         switch_tab(self.view_box, item.list_widget)
 
+    def save(self, *args):
+        if Player.get_source().showing_list_type == \
+                music_view.PLAYING_LIST_TYPE:
+            current_playing_item = 'playing_list'
+        elif Player.get_source().showing_list_type == \
+                music_view.PERSONAL_FM_ITEM:
+            current_playing_item = 'personal_fm'
+        else:
+            current_playing_item = None
+
+        playing_list_songs = self.playing_list_item.songs
+        try:
+            playing_list_song = self.playing_list_item.song_view.current_song.get_dict()
+        except:
+            playing_list_song = None
+
+        personal_fm_songs = self.personal_fm_item.song_view.dump_songs()
+        try:
+            personal_fm_song = self.personal_fm_item.song_view.current_song.get_dict()
+        except:
+            personal_fm_song = None
+
+        utils.save_db((current_playing_item,
+            (playing_list_song, playing_list_songs),
+            (personal_fm_song, personal_fm_songs)),
+            self.listen_db_file)
+
     def load(self):
+        try:
+            objs = utils.load_db(self.listen_db_file)
+            (current_playing_item,
+                (playing_list_song, playing_list_songs),
+                (personal_fm_song, personal_fm_songs)) = objs
+            if current_playing_item == 'playing_list':
+                self.current_playing_item = self.playing_list_item
+                self.last_song = Song(playing_list_song)
+            elif current_playing_item == 'personal_fm':
+                self.current_playing_item = self.personal_fm_item
+                self.last_song = Song(personal_fm_song)
+            else:
+                self.current_playing_item = None
+                self.last_song = None
+            self.playing_list_item.add_songs([Song(song) for song in
+                playing_list_songs])
+            if nplayer.is_login:
+                self.personal_fm_item.add_songs([Song(song) for song in
+                    personal_fm_songs])
+        except:
+            self.last_song = None
+            utils.save_db(None, self.listen_db_file)
             return
 
     def load_playlist(self):
@@ -120,4 +169,3 @@ class PlaylistView(TreeView):
         TreeView.add_items(self, items, insert_pos, clear_first)
 
     items = property(lambda self: self.visible_items)
-

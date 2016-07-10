@@ -78,7 +78,8 @@ class MusicView(TreeView):
         self.view_type = view_type
         self.view_data = data
 
-        event_manager.connect("list-songs", self.list_songs)
+        # playlist item current showing
+        self.showing_item = None
 
         if self.view_type not in [self.PLAYING_LIST_TYPE, self.LOGIN_LIST_TYPE,
                 self.PERSONAL_FM_ITEM]:
@@ -101,7 +102,8 @@ class MusicView(TreeView):
     def clear_items(self):
         self.clear()
 
-    def list_songs(self, songs, thread_id, **kwargs):
+    def list_songs(self, songs, showing_item, thread_id):
+        self.showing_item = showing_item
         self.clear_items();
         if thread_id != self.online_thread_id:
             return
@@ -200,10 +202,7 @@ class MusicView(TreeView):
             return
 
         if not isinstance(songs[0], Song):
-            temp = []
-            for song in songs:
-                temp.append(Song(song))
-            songs = temp
+            songs = [Song(song) for song in songs]
 
         song_items = [ SongItem(song) for song in songs if song.song_id not in
                 [exists_song.song_id for exists_song in self.get_songs()]]
