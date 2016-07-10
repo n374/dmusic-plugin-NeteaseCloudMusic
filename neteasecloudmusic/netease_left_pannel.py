@@ -54,6 +54,7 @@ class LeftPannel(gtk.VBox):
         self.music_view = music_view
         # self.playlist_view.connect("single-click-item",
                 # self.playing_list_item.expand)
+        event_manager.connect("add-and-play", self.add_to_playlinglist_and_play)
 
         self.load_playlist_id = 0
 
@@ -73,6 +74,12 @@ class LeftPannel(gtk.VBox):
 
         self.playlist_view.set_highlight_item(item)
         switch_tab(self.view_box, item.list_widget)
+
+    def add_to_playlinglist_and_play(self, obj, songslist, play=False):
+        songs = songslist[0]
+        self.playing_list_item.add_songs(songs)
+        if play:
+            self.playing_list_item.play_song(songs)
 
     def save(self, *args):
         if Player.get_source().showing_list_type == \

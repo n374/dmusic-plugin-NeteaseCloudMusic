@@ -81,6 +81,8 @@ class MusicView(TreeView):
         # playlist item current showing
         self.showing_item = None
 
+        self.connect("double-click-item", self.on_music_view_double_click)
+
         if self.view_type not in [self.PLAYING_LIST_TYPE, self.LOGIN_LIST_TYPE,
                 self.PERSONAL_FM_ITEM]:
             self.load_onlinelist_songs()
@@ -99,15 +101,22 @@ class MusicView(TreeView):
     def update_song_tooltip(self, widget, text):
         self.set_tooltip_text(text)
 
+    def on_music_view_double_click(self, widget, item, column, x, y):
+        event_manager.emit("add-and-play", ([item.get_song()], False))
+
     def clear_items(self):
         self.clear()
 
     def list_songs(self, songs, showing_item, thread_id):
-        self.showing_item = showing_item
-        self.clear_items();
+        if not songs:
+            return
         if thread_id != self.online_thread_id:
             return
-        self.add_songs([Song(song) for song in songs])
+        self.showing_item = showing_item
+        self.clear_items();
+        if not isinstance(songs[0], Song):
+            songs = [Song(song) for song in songs]
+        self.add_songs(songs)
 
     def draw_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")

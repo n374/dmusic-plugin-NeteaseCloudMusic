@@ -194,10 +194,10 @@ class SongItem(TreeItem):
         return self.song
 
     def __hash__(self):
-        return hash(self.song.get("uri"))
+        return hash(self.song.song_id)
 
     def __repr__(self):
-        return "<SongItem %s>" % self.song.get("uri")
+        return "<SongItem %s>" % self.song.song_name
 
     def __cmp__(self, other_item):
         if not other_item:
