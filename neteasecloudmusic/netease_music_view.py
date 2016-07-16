@@ -110,6 +110,7 @@ class MusicView(TreeView):
             nplayer.play_song(item.get_song())
         else:
             event_manager.emit("add-and-play", ([item.get_song()], True))
+        self.set_highlight_song(item.get_song())
         event_manager.emit("save")
 
     def clear_items(self):
@@ -125,6 +126,9 @@ class MusicView(TreeView):
         if not isinstance(songs[0], Song):
             songs = [Song(song) for song in songs]
         self.add_songs(songs)
+        # Bad way to check if PlayingListItem
+        if hasattr(self.showing_item, 'get_next_song'):
+            self.set_highlight_song(self.showing_item.playing_song)
 
     def draw_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")

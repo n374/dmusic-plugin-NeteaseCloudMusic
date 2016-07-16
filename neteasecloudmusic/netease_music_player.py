@@ -69,35 +69,11 @@ class MusicPlayer(NetEase):
 
         return lrc_path
 
-    def get_better_quality_music(self, song):
-        try:
-            # 在有加密算法的情况下优先获取320K url
-            song_dfsId = str(song['hMusic']['dfsId'])
-            encrypted_song_id = encrypted_id(song_dfsId)
-            song['uri'] = 'http://m1.music.126.net/' + encrypted_song_id + '/' + song_dfsId + '.mp3'
-        except:
-            try:
-                # 在有加密算法的情况下获取160K url
-                song_dfsId = str(song['mMusic']['dfsId'])
-                encrypted_song_id = encrypted_id(song_dfsId)
-                song['uri'] = 'http://m1.music.126.net/' + encrypted_song_id + '/' + song_dfsId + '.mp3'
-            except:
-                song['uri'] = song['mp3Url']
-        return song
-
     @property
     def ClientInfo(self):
         info = dict(cookie=self.cookie,
                 client_version = self.client_version)
         return json.dumps(info)
-
-    def Playlists(self):
-        return {item['id']:item['name'] for item in
-                NetEase().get_user_playlist(self.uid, offset=0)}
-
-    def AddSongs(self, songs):
-        if songs:
-            event_manager.emit("add-songs", songs)
 
     def handle_songs_info(self, songs):
         save_path = os.path.expanduser(config.get("lyrics", "save_lrc_path"))
@@ -133,14 +109,6 @@ class MusicPlayer(NetEase):
         Player.play_new(songs_info[0])
 
         event_manager.emit("save")
-
-    def PlaySongs(self, songs):
-        if songs:
-            event_manager.emit("play-songs", songs)
-
-    def FavoriteSongs(self, songs):
-        if songs:
-            event_manager.emit("collect-songs", songs)
 
     @property
     def is_login(self):

@@ -120,24 +120,25 @@ class LeftPannel(gtk.VBox):
                 (personal_fm_song, personal_fm_songs)) = objs
             if current_playing_item not in ['playing_list', 'personal_fm']:
                 self.current_playing_item = None
-                self.last_song = None
+                last_song = None
                 return
             if current_playing_item == 'playing_list':
                 Player.set_source(self.playing_list_item)
                 self.current_playing_item = self.playing_list_item
-                self.last_song = playing_list_song
+                last_song = playing_list_song
             elif current_playing_item == 'personal_fm':
                 Player.set_source(self.personal_fm_item)
                 self.current_playing_item = self.personal_fm_item
-                self.last_song = personal_fm_song
+                last_song = personal_fm_song
+            self.current_playing_item.playing_song = last_song
             self.playing_list_item.add_songs(playing_list_songs)
             self.personal_fm_item.add_songs(personal_fm_songs)
-            nplayer.play_song(self.last_song, play=True)
+            nplayer.play_song(last_song, play=True)
             if nplayer.is_login:
                 self.personal_fm_item.add_songs([Song(song) for song in
                     personal_fm_songs])
         except:
-            self.last_song = None
+            last_song = None
             utils.save_db(None, self.listen_db_file)
             return
 
