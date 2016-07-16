@@ -110,6 +110,7 @@ class MusicView(TreeView):
             nplayer.play_song(item.get_song())
         else:
             event_manager.emit("add-and-play", ([item.get_song()], True))
+        event_manager.emit("save")
 
     def clear_items(self):
         self.clear()

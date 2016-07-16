@@ -87,10 +87,9 @@ class LeftPannel(gtk.VBox):
         self.playing_list_item.get_next_song();
 
     def save(self, *args):
-        return
         if not Player.get_source():
             current_playing_item = None;
-        elif Player.get_source().showing_list_type == \
+        elif Player.get_source().list_type == \
                 music_view.PLAYING_LIST_TYPE:
             current_playing_item = 'playing_list'
         else:
@@ -98,13 +97,13 @@ class LeftPannel(gtk.VBox):
 
         playing_list_songs = self.playing_list_item.songs
         try:
-            playing_list_song = self.playing_list_item.song_view.current_song.get_dict()
+            playing_list_song = self.playing_list_item.playing_song
         except:
             playing_list_song = None
 
-        personal_fm_songs = self.personal_fm_item.song_view.dump_songs()
+        personal_fm_songs = self.personal_fm_item.songs
         try:
-            personal_fm_song = self.personal_fm_item.song_view.current_song.get_dict()
+            personal_fm_song = self.personal_fm_item.playing_song
         except:
             personal_fm_song = None
 
@@ -119,17 +118,21 @@ class LeftPannel(gtk.VBox):
             (current_playing_item,
                 (playing_list_song, playing_list_songs),
                 (personal_fm_song, personal_fm_songs)) = objs
-            if current_playing_item == 'playing_list':
-                self.current_playing_item = self.playing_list_item
-                self.last_song = Song(playing_list_song)
-            elif current_playing_item == 'personal_fm':
-                self.current_playing_item = self.personal_fm_item
-                self.last_song = Song(personal_fm_song)
-            else:
+            if current_playing_item not in ['playing_list', 'personal_fm']:
                 self.current_playing_item = None
                 self.last_song = None
-            self.playing_list_item.add_songs([Song(song) for song in
-                playing_list_songs])
+                return
+            if current_playing_item == 'playing_list':
+                Player.set_source(self.playing_list_item)
+                self.current_playing_item = self.playing_list_item
+                self.last_song = playing_list_song
+            elif current_playing_item == 'personal_fm':
+                Player.set_source(self.personal_fm_item)
+                self.current_playing_item = self.personal_fm_item
+                self.last_song = personal_fm_song
+            self.playing_list_item.add_songs(playing_list_songs)
+            self.personal_fm_item.add_songs(personal_fm_songs)
+            nplayer.play_song(self.last_song, play=True)
             if nplayer.is_login:
                 self.personal_fm_item.add_songs([Song(song) for song in
                     personal_fm_songs])
