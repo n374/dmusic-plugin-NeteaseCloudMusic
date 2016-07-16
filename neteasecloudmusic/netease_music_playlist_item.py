@@ -298,6 +298,7 @@ class PlayingListItem(PlaylistItem):
         else:
             playback_mode = self.playback_mode
 
+        next_index = 0
         if self.playing_song:
             if self.playing_song in self.songs:
                 current_index = self.songs.index(self.playing_song)
@@ -316,11 +317,7 @@ class PlayingListItem(PlaylistItem):
                             + range(current_index+1, len(self.songs)))
                 else:
                     next_index = 0
-                self.playing_song = self.songs[next_index]
-            else:
-                self.playing_song = self.songs[0]
-        else:
-            self.playing_song = self.songs[0]
+        self.set_playing_song(self.songs[next_index])
         nplayer.play_song(self.playing_song, play=True)
 
     def get_previous_song(self):
@@ -331,6 +328,7 @@ class PlayingListItem(PlaylistItem):
         else:
             playback_mode = self.playback_mode
 
+        previous_index = 0
         if self.playing_song:
             if self.playing_song in self.songs:
                 current_index = self.songs.index(self.playing_song)
@@ -347,13 +345,13 @@ class PlayingListItem(PlaylistItem):
                             + range(current_index+1, len(self.songs)))
                 else:
                     previous_index = 0
-                self.playing_song = self.songs[previous_index]
-            else:
-                self.playing_song = self.songs[0]
-        else:
-            self.playing_song = self.songs[0]
+        self.set_playing_song(self.songs[previous_index])
         nplayer.play_song(self.playing_song, play=True)
 
+    def set_playing_song(self, song):
+        self.playing_song = song
+        if music_view.showing_item == self:
+            music_view.set_highlight_song(song)
 
     def add_songs(self, songs):
         songs = [song for song in songs if song.song_id not in
@@ -369,7 +367,6 @@ class PlayingListItem(PlaylistItem):
         music_view.list_songs(self.songs, self, thread_id)
 
 class CategoryListItem(NodeItem):
-
     def __init__(self, list_data, list_type, is_online_list=False,
             has_separator=True):
         NodeItem.__init__(self)

@@ -82,7 +82,7 @@ class LeftPannel(gtk.VBox):
         self.playing_list_item.add_songs(songs)
         if args[1]:
             nplayer.play_song(songs[0], True)
-            self.playing_list_item.playing_song = songs[0]
+            self.playing_list_item.set_playing_song(songs[0])
 
     def next_song(self, *args):
         self.playing_list_item.get_next_song();
@@ -131,7 +131,7 @@ class LeftPannel(gtk.VBox):
                 Player.set_source(self.personal_fm_item)
                 self.current_playing_item = self.personal_fm_item
                 last_song = personal_fm_song
-            self.current_playing_item.playing_song = last_song
+            self.current_playing_item.set_playing_song(last_song)
             self.playing_list_item.add_songs(playing_list_songs)
             self.personal_fm_item.add_songs(personal_fm_songs)
             nplayer.play_song(last_song, play=True)

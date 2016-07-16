@@ -84,7 +84,7 @@ class MusicView(TreeView):
         if not item or not item.available:
             return
         if self.showing_item.list_type == const.PERSONAL_FM_ITEM:
-            self.showing_item.playing_song = item.get_song()
+            self.showing_item.set_playing_song = item.get_song()
             Player.set_source(self.showing_item)
             nplayer.play_song(item.get_song())
         else:
