@@ -17,6 +17,8 @@ class Song(object):
         self.length = str(data["dt"]/60000) + "分" \
                 + str((data["dt"]%60000)/1000) + "秒"
 
+        self.available = 0 if data['st'] < 0 else 1
+
         if data["h"]:
             self.fid = data["h"]["fid"]
         elif data["m"]:

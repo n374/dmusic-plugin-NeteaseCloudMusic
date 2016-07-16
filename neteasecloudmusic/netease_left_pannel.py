@@ -54,6 +54,7 @@ class LeftPannel(gtk.VBox):
         self.music_view = music_view
         event_manager.connect("add-and-play", self.add_to_playlinglist_and_play)
         event_manager.connect("save", self.save)
+        event_manager.connect("next-song", self.next_song)
 
         self.load_playlist_id = 0
 
@@ -81,6 +82,9 @@ class LeftPannel(gtk.VBox):
         if args[1]:
             nplayer.play_song(songs[0], True)
             self.playing_list_item.playing_song = songs[0]
+
+    def next_song(self, *args):
+        self.playing_list_item.get_next_song();
 
     def save(self, *args):
         return

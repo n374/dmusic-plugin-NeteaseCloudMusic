@@ -105,7 +105,7 @@ class MusicPlayer(NetEase):
         for song in songs:
             url = self.get_songs_url([song.song_id])[0]['url']
             if not url:
-                self.get_next_song()
+                event_manager.emit("next-song")
                 return
             # Conver to deepin_Song so deepin music player can get info
             self.save_lyric(self.get_lyric(song.song_id), song.song_id,
@@ -127,7 +127,10 @@ class MusicPlayer(NetEase):
         if not song:
             return None
 
-        Player.play_new(self.handle_songs_info([song])[0])
+        songs_info = self.handle_songs_info([song])
+        if (not songs_info):
+            return None
+        Player.play_new(songs_info[0])
 
         event_manager.emit("save")
 

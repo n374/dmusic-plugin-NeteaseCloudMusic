@@ -102,6 +102,8 @@ class MusicView(TreeView):
         self.set_tooltip_text(text)
 
     def on_music_view_double_click(self, widget, item, column, x, y):
+        if not item or not item.available:
+            return
         if self.showing_item.list_type == self.PERSONAL_FM_ITEM:
             self.showing_item.playing_song = item.get_song()
             Player.set_source(self.showing_item)
@@ -177,8 +179,9 @@ class MusicView(TreeView):
 
     def set_highlight_song(self, song):
         if not song: return
+        song = Song(song) if not isinstance(song, Song) else song
         if SongItem(song) in self.items:
-            self.set_highlight_item(self.items[self.items.index(SongItem(Song(song)))])
+            self.set_highlight_item(self.items[self.items.index(SongItem(song))])
             self.visible_highlight()
             self.queue_draw()
 

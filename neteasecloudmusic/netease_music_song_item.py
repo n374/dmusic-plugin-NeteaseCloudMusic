@@ -4,8 +4,12 @@
 import pango
 from dtk.ui.utils import get_content_size
 from dtk.ui.treeview import TreeItem
-from widget.ui_utils import render_item_text, draw_single_mask
+from widget.ui_utils import draw_single_mask
+from widget.skin import app_theme
 from HTMLParser import HTMLParser
+from dtk.ui.theme import ui_theme
+from dtk.ui.draw import draw_text
+import dtk.ui.utils
 
 from netease_music_song import Song
 from netease_events import event_manager
@@ -25,6 +29,7 @@ class SongItem(TreeItem):
         self.column_index = 0
 
         self.default_height = 26
+        self.available = song.available
 
     def emit_redraw_request(self):
         if self.redraw_request_callback:
@@ -84,11 +89,14 @@ class SongItem(TreeItem):
     def render_title(self, cr, rect):
         '''Render title.'''
         if self.is_highlight:
-            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemHighlight")
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height,
+                    "globalItemHighlight")
         elif self.is_select:
-            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemSelect")
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height,
+                    "globalItemSelect")
         elif self.is_hover:
-            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height, "globalItemHover")
+            draw_single_mask(cr, rect.x + 1, rect.y, rect.width, rect.height,
+                    "globalItemHover")
 
         # if self.is_highlight:
         #     text_color = "#ffffff"
@@ -97,7 +105,7 @@ class SongItem(TreeItem):
 
         rect.x += self.title_padding_x
         rect.width -= self.title_padding_x * 2
-        render_item_text(cr, self.song.song_name, rect, self.is_select, self.is_highlight, error=self.song_error)
+        self.render_item_text(cr, self.song.song_name, rect, self.is_select, self.is_highlight, error=self.song_error)
 
     def render_artist(self, cr, rect):
         '''Render artist.'''
@@ -111,7 +119,7 @@ class SongItem(TreeItem):
 
         rect.x += self.artist_padding_x
         rect.width -= self.artist_padding_x * 2
-        render_item_text(cr, self.song.artist_names, rect, self.is_select,
+        self.render_item_text(cr, self.song.artist_names, rect, self.is_select,
                 self.is_highlight, error=self.song_error,
                 align=pango.ALIGN_RIGHT)
 
@@ -127,7 +135,7 @@ class SongItem(TreeItem):
 
         rect.width -= self.length_padding_x * 2
         rect.x += self.length_padding_x * 2
-        render_item_text(cr, self.song.length, rect, self.is_select, self.is_highlight, error=self.song_error, font_size=8)
+        self.render_item_text(cr, self.song.length, rect, self.is_select, self.is_highlight, error=self.song_error, font_size=8)
 
     def render_album(self, cr, rect):
         '''Render album.'''
@@ -139,7 +147,7 @@ class SongItem(TreeItem):
             draw_single_mask(cr, rect.x, rect.y, rect.width, rect.height, "globalItemHover")
 
         rect.width -= self.album_padding_x * 2
-        render_item_text(cr, self.song.album_name, rect, self.is_select, self.is_highlight, error=self.song_error)
+        self.render_item_text(cr, self.song.album_name, rect, self.is_select, self.is_highlight, error=self.song_error)
 
     def get_height(self):
         # if self.is_highlight:
@@ -211,3 +219,22 @@ class SongItem(TreeItem):
             return self.song == other_item.get_song()
         except:
             return False
+
+    def render_item_text(self, cr, content, rect, in_select, in_highlight, align=pango.ALIGN_LEFT, font_size=9, error=False):
+        if in_highlight:
+            color = app_theme.get_color("simpleSelectItem").get_color()
+        else:
+            color = app_theme.get_color("labelText").get_color()
+            # color = "#707070"
+
+        if error:
+            color = "#ff0000"
+        if not self.available:
+            color = "#cccccc"
+
+        def xmlescape(stri):
+            stri = str(stri)
+            stri = stri.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            return stri
+        content = xmlescape(content)
+        draw_text(cr, content, rect.x, rect.y, rect.width, rect.height, font_size, color, alignment=align)

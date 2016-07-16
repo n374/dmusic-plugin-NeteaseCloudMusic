@@ -328,6 +328,7 @@ class PlayingListItem(PlaylistItem):
         else:
             self.playing_song = self.songs[0]
         nplayer.play_song(self.playing_song, play=True)
+        music_view.set_highlight_song(self.playing_song)
 
     def get_previous_song(self):
         if len(self.songs) <= 0:
@@ -359,6 +360,7 @@ class PlayingListItem(PlaylistItem):
         else:
             self.playing_song = self.songs[0]
         nplayer.play_song(self.playing_song, play=True)
+        music_view.set_highlight_song(self.playing_song)
 
 
     def add_songs(self, songs):
