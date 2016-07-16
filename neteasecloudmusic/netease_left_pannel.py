@@ -76,9 +76,11 @@ class LeftPannel(gtk.VBox):
 
     def add_to_playlinglist_and_play(self, obj, args):
         songs = args[0]
+        Player.set_source(self.playing_list_item)
         self.playing_list_item.add_songs(songs)
         if args[1]:
             nplayer.play_song(songs[0], True)
+            self.playing_list_item.playing_song = songs[0]
 
     def save(self, *args):
         return

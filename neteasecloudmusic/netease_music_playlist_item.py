@@ -9,6 +9,7 @@ from dtk.ui.draw import draw_pixbuf, draw_text
 from dtk.ui.treeview import NodeItem
 from dtk.ui.threads import post_gui
 from HTMLParser import HTMLParser
+from config import config
 
 from widget.skin import app_theme
 from widget.ui_utils import (draw_single_mask, draw_separator, switch_tab,
@@ -298,7 +299,7 @@ class PlayingListItem(PlaylistItem):
         if len(self.songs) <= 0:
             return
 
-        if self.list_type == MusicView.PERSONAL_FM_ITEM:
+        if self.list_type == self.PERSONAL_FM_ITEM:
             playback_mode = 'order_mode'
         else:
             playback_mode = self.playback_mode
@@ -321,22 +322,22 @@ class PlayingListItem(PlaylistItem):
                             + range(current_index+1, len(self.songs)))
                 else:
                     next_index = 0
-                playing_song = self.songs[next_index]
+                self.playing_song = self.songs[next_index]
             else:
-                playing_song = self.songs[0]
+                self.playing_song = self.songs[0]
         else:
-            playing_song = self.songs[0]
-        self.request_song(playing_song, play=True)
+            self.playing_song = self.songs[0]
+        nplayer.play_song(self.playing_song, play=True)
 
     def get_previous_song(self):
         if len(self.songs) <= 0:
             return
-        if self.list_type == MusicView.PERSONAL_FM_ITEM:
+        if self.list_type == self.PERSONAL_FM_ITEM:
             playback_mode = 'order_mode'
         else:
             playback_mode = self.playback_mode
 
-        if elf.playing_song:
+        if self.playing_song:
             if self.playing_song in self.songs:
                 current_index = self.songs.index(self.playing_song)
                 if playback_mode == 'list_mode':
@@ -352,12 +353,12 @@ class PlayingListItem(PlaylistItem):
                             + range(current_index+1, len(self.songs)))
                 else:
                     previous_index = 0
-                playing_song = self.songs[previous_index]
+                self.playing_song = self.songs[previous_index]
             else:
-                playing_song = self.songs[0]
+                self.playing_song = self.songs[0]
         else:
-            playing_song = self.songs[0]
-            self.request_song(playing_song, play=True)
+            self.playing_song = self.songs[0]
+        nplayer.play_song(self.playing_song, play=True)
 
 
     def add_songs(self, songs):

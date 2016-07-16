@@ -102,7 +102,12 @@ class MusicView(TreeView):
         self.set_tooltip_text(text)
 
     def on_music_view_double_click(self, widget, item, column, x, y):
-        event_manager.emit("add-and-play", ([item.get_song()], True))
+        if self.showing_item.list_type == self.PERSONAL_FM_ITEM:
+            self.showing_item.playing_song = item.get_song()
+            Player.set_source(self.showing_item)
+            nplayer.play_song(item.get_song())
+        else:
+            event_manager.emit("add-and-play", ([item.get_song()], True))
 
     def clear_items(self):
         self.clear()
@@ -120,11 +125,6 @@ class MusicView(TreeView):
 
     def draw_mask(self, cr, x, y, width, height):
         draw_alpha_mask(cr, x, y, width, height, "layoutMiddle")
-
-    # set self as current global playlist
-    def set_current_source(self):
-        if Player.get_source() != self:
-            Player.set_source(self)
 
     def pre_fetch_fm_songs(self):
         if (self.highlight_item and (self.highlight_item in self.items) and
