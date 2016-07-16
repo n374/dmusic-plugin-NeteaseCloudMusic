@@ -179,7 +179,6 @@ class NetEase(object):
     def get_user_playlist(self, uid=None, offset=0, limit=500):
         if not uid:
             uid = self.get_uid()
-        print self.cookies
         for cookie in self.cookies:
             if cookie.name == "__csrf":
                 csrf = cookie.value
