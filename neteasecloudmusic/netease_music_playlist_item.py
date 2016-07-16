@@ -25,6 +25,7 @@ from netease_music_tools import get_image
 from netease_events import event_manager
 from netease_music_browser import LoginDialog
 from netease_music_view import music_view
+from netease_music_const import const
 
 class LoginButton(ComplexButton):
     def __init__(self, title, callback=None):
@@ -76,13 +77,6 @@ class LoginBox(gtk.HBox):
                 rect.width, rect.height, "layoutMiddle")
 
 class PlaylistItem(NodeItem):
-    PLAYING_LIST_TYPE = 1
-    FAVORITE_LIST_TYPE = 2
-    CREATED_LIST_TYPE = 3
-    COLLECTED_LIST_TYPE = 4
-    LOGIN_LIST_TYPE = 5
-    PERSONAL_FM_ITEM = 6
-
     def __init__(self, list_data, list_type, is_online_list=False,
             has_separator=True):
         NodeItem.__init__(self)
@@ -93,8 +87,8 @@ class PlaylistItem(NodeItem):
         self.padding_y = 0
         self.padding_x = 8
 
-        if list_type and list_type in [self.PLAYING_LIST_TYPE,
-                self.PERSONAL_FM_ITEM, self.LOGIN_LIST_TYPE]:
+        if list_type and list_type in [const.PLAYING_LIST_TYPE,
+                const.PERSONAL_FM_ITEM, const.LOGIN_LIST_TYPE]:
             self.title = list_data
         else:
             self.title = list_data.get("name", "")
@@ -103,11 +97,11 @@ class PlaylistItem(NodeItem):
 
         if is_online_list:
             if self.data['specialType'] == 5:
-                self.list_type = self.FAVORITE_LIST_TYPE
+                self.list_type = const.FAVORITE_LIST_TYPE
             elif self.data['subscribed']:
-                self.list_type = self.COLLECTED_LIST_TYPE
+                self.list_type = const.COLLECTED_LIST_TYPE
             else:
-                self.list_type = self.CREATED_LIST_TYPE
+                self.list_type = const.CREATED_LIST_TYPE
         else:
             self.list_type = list_type
 
@@ -133,23 +127,23 @@ class PlaylistItem(NodeItem):
             success_funcs=(self.login_success, ())).start()
 
     def init_pixbufs(self):
-        if self.list_type == self.PLAYING_LIST_TYPE:
+        if self.list_type == const.PLAYING_LIST_TYPE:
             normal_image_name = "playing_list.png"
             press_image_name = "playing_list_press.png"
 
-        elif self.list_type == self.PERSONAL_FM_ITEM:
+        elif self.list_type == const.PERSONAL_FM_ITEM:
             normal_image_name = "personal_fm.png"
             press_image_name = "personal_fm_press.png"
 
-        elif self.list_type == self.FAVORITE_LIST_TYPE:
+        elif self.list_type == const.FAVORITE_LIST_TYPE:
             normal_image_name = "favorite_list.png"
             press_image_name = "favorite_list_press.png"
 
-        elif self.list_type == self.CREATED_LIST_TYPE:
+        elif self.list_type == const.CREATED_LIST_TYPE:
             normal_image_name = "created_list.png"
             press_image_name = "created_list_press.png"
 
-        elif self.list_type == self.COLLECTED_LIST_TYPE:
+        elif self.list_type == const.COLLECTED_LIST_TYPE:
             normal_image_name = "collected_list.png"
             press_image_name = "collected_list_press.png"
         else:
@@ -264,7 +258,7 @@ class PlaylistItem(NodeItem):
     @property
     def list_widget(self):
         switch_tab(self.main_box, self.song_view)
-        if not nplayer.is_login and self.list_type == self.LOGIN_LIST_TYPE:
+        if not nplayer.is_login and self.list_type == const.LOGIN_LIST_TYPE:
             switch_tab(self.main_box, self.login_box)
 
         return self.main_box
@@ -299,7 +293,7 @@ class PlayingListItem(PlaylistItem):
         if len(self.songs) <= 0:
             return
 
-        if self.list_type == self.PERSONAL_FM_ITEM:
+        if self.list_type == const.PERSONAL_FM_ITEM:
             playback_mode = 'order_mode'
         else:
             playback_mode = self.playback_mode
@@ -332,7 +326,7 @@ class PlayingListItem(PlaylistItem):
     def get_previous_song(self):
         if len(self.songs) <= 0:
             return
-        if self.list_type == self.PERSONAL_FM_ITEM:
+        if self.list_type == const.PERSONAL_FM_ITEM:
             playback_mode = 'order_mode'
         else:
             playback_mode = self.playback_mode
@@ -375,12 +369,6 @@ class PlayingListItem(PlaylistItem):
         music_view.list_songs(self.songs, self, thread_id)
 
 class CategoryListItem(NodeItem):
-    # PLAYING_LIST_TYPE = 1
-    # FAVORITE_LIST_TYPE = 2
-    CREATED_LIST_TYPE = 3
-    COLLECTED_LIST_TYPE = 4
-    # LOGIN_LIST_TYPE = 5
-    # PERSONAL_FM_ITEM = 6
 
     def __init__(self, list_data, list_type, is_online_list=False,
             has_separator=True):
@@ -404,10 +392,10 @@ class CategoryListItem(NodeItem):
         self.main_box = gtk.VBox()
 
     def init_pixbufs(self):
-        if self.list_type == self.CREATED_LIST_TYPE:
+        if self.list_type == const.CREATED_LIST_TYPE:
             normal_image_name = "created_list.png"
             press_image_name = "created_list_press.png"
-        elif self.list_type == self.COLLECTED_LIST_TYPE:
+        elif self.list_type == const.COLLECTED_LIST_TYPE:
             normal_image_name = "collected_list.png"
             press_image_name = "collected_list_press.png"
 

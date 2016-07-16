@@ -21,6 +21,7 @@ from netease_events import event_manager
 from netease_music_view import music_view
 from netease_music_playlist_item import PlaylistItem, CategoryListItem, PlayingListItem
 from netease_music_player import neteasecloud_music_player as nplayer
+from netease_music_const import const
 
 class LeftPannel(gtk.VBox):
     def __init__(self):
@@ -31,13 +32,13 @@ class LeftPannel(gtk.VBox):
 
         # Set playinglist and personal FM item
         self.playing_list_item = PlayingListItem('播放列表',
-                PlaylistItem.PLAYING_LIST_TYPE)
+                const.PLAYING_LIST_TYPE)
         self.personal_fm_item = PlayingListItem("私人FM",
-                PlaylistItem.PERSONAL_FM_ITEM)
+                const.PERSONAL_FM_ITEM)
         self.created_list_item = CategoryListItem("创建的歌单",
-                CategoryListItem.CREATED_LIST_TYPE)
+                const.CREATED_LIST_TYPE)
         self.collected_list_item = CategoryListItem("收藏的歌单",
-                CategoryListItem.COLLECTED_LIST_TYPE)
+                const.COLLECTED_LIST_TYPE)
 
         self.playlist_view = PlaylistView(enable_drag_drop=False,
                 enable_multiple_select=True)
@@ -90,7 +91,7 @@ class LeftPannel(gtk.VBox):
         if not Player.get_source():
             current_playing_item = None;
         elif Player.get_source().list_type == \
-                music_view.PLAYING_LIST_TYPE:
+                const.PLAYING_LIST_TYPE:
             current_playing_item = 'playing_list'
         else:
             current_playing_item = 'personal_fm'
@@ -169,11 +170,11 @@ class LeftPannel(gtk.VBox):
         if len(playlists) > 0:
             items = [PlaylistItem(data, None, True, False) for data in playlists]
             self.created_list_item.add_items([item for item in items if
-                item.list_type == PlaylistItem.FAVORITE_LIST_TYPE])
+                item.list_type == const.FAVORITE_LIST_TYPE])
             self.created_list_item.add_items([item for item in items if
-                item.list_type == PlaylistItem.CREATED_LIST_TYPE])
+                item.list_type == const.CREATED_LIST_TYPE])
             self.collected_list_item.add_items([item for item in items if
-                item.list_type == PlaylistItem.COLLECTED_LIST_TYPE])
+                item.list_type == const.COLLECTED_LIST_TYPE])
 
 
 class PlaylistView(TreeView):

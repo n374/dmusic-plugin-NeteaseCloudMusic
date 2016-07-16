@@ -28,30 +28,9 @@ from netease_music_player import neteasecloud_music_player as nplayer
 from netease_events import event_manager
 from netease_music_song import Song
 from netease_music_song_item import SongItem
+from netease_music_const import const
 
 class MusicView(TreeView):
-    # 播放列表
-    PLAYING_LIST_TYPE = 1
-    # 我喜欢的音乐
-    FAVORITE_LIST_TYPE = 2
-    # 创建的歌单
-    CREATED_LIST_TYPE = 3
-    # 收藏的歌单
-    COLLECTED_LIST_TYPE = 4
-    # 登录窗口
-    LOGIN_LIST_TYPE = 5
-    # 私人FM
-    PERSONAL_FM_ITEM = 6
-
-    # 列表循环
-    LIST_REPEAT = 1
-    # 单曲循环
-    SINGLE_REPEAT = 2
-    # 顺序播放
-    ORDER_PLAY = 3
-    # 随机播放
-    RANDOMIZE = 4
-
     FAVORITE_SONGS = []
     CREATED_LISTS_DICT = {}
 
@@ -83,11 +62,11 @@ class MusicView(TreeView):
 
         self.connect("double-click-item", self.on_music_view_double_click)
 
-        if self.view_type not in [self.PLAYING_LIST_TYPE, self.LOGIN_LIST_TYPE,
-                self.PERSONAL_FM_ITEM]:
+        if self.view_type not in [const.PLAYING_LIST_TYPE, const.LOGIN_LIST_TYPE,
+                const.PERSONAL_FM_ITEM]:
             self.load_onlinelist_songs()
 
-        if self.view_type == self.PERSONAL_FM_ITEM:
+        if self.view_type == const.PERSONAL_FM_ITEM:
             self.enable_multiple_select=False
 
     @property
@@ -104,7 +83,7 @@ class MusicView(TreeView):
     def on_music_view_double_click(self, widget, item, column, x, y):
         if not item or not item.available:
             return
-        if self.showing_item.list_type == self.PERSONAL_FM_ITEM:
+        if self.showing_item.list_type == const.PERSONAL_FM_ITEM:
             self.showing_item.playing_song = item.get_song()
             Player.set_source(self.showing_item)
             nplayer.play_song(item.get_song())
@@ -135,7 +114,7 @@ class MusicView(TreeView):
 
     def pre_fetch_fm_songs(self):
         if (self.highlight_item and (self.highlight_item in self.items) and
-                self.view_type == self.PERSONAL_FM_ITEM):
+                self.view_type == const.PERSONAL_FM_ITEM):
             current_index = self.items.index(self.highlight_item)
             if current_index >= len(self.items)-2:
                 songs = [Song(song) for song in nplayer.personal_fm()]
