@@ -354,12 +354,22 @@ class PlayingListItem(PlaylistItem):
             music_view.set_highlight_song(song)
 
     def add_songs(self, songs):
+        if not songs:
+            return
         songs = [song for song in songs if song.song_id not in
                 [exists_song.song_id for exists_song in self.songs]]
         self.songs.extend(songs)
         event_manager.emit("save")
         if music_view.showing_item is self:
-            self.list_songs
+            self.list_songs()
+
+    def delete_songs(self, songs):
+        if not songs:
+            return
+        self.songs = [song for song in self.songs if song not in songs]
+        event_manager.emit("save")
+        if music_view.showing_item is self:
+            self.list_songs()
 
     def list_songs(self):
         music_view.online_thread_id += 1

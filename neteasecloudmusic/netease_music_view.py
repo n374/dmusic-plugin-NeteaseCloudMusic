@@ -55,12 +55,13 @@ class MusicView(TreeView):
 
         self.db_file = get_cache_file("neteasecloudmusic/neteasecloudmusic.db")
         self.view_type = view_type
-        self.view_data = data
 
         # playlist item current showing
         self.showing_item = None
+        self.showing_songs = []
 
         self.connect("double-click-item", self.on_music_view_double_click)
+        self.connect("right-press-items", self.on_music_view_right_click)
 
         if self.view_type not in [const.PLAYING_LIST_TYPE, const.LOGIN_LIST_TYPE,
                 const.PERSONAL_FM_ITEM]:
@@ -92,16 +93,32 @@ class MusicView(TreeView):
         self.set_highlight_song(item.get_song())
         event_manager.emit("save")
 
+    def on_music_view_right_click(self, widget, x, y, current_item, selected_items):
+        if current_item and selected_items:
+            selected_songs = [item.get_song() for item in selected_items]
+            if self.showing_item.list_type == const.PLAYING_LIST_TYPE:
+                if len(selected_items) > 0:
+                    items = [
+                            (None, _("播放"), lambda:
+                                nplayer.play_song(current_item.get_song())),
+                            (None, _("删除"), lambda:
+                                self.showing_item.delete_songs(selected_songs)),
+                            (None, _("清空"), lambda:
+                                self.showing_item.delete_songs(self.showing_songs)),
+                            ]
+            Menu(items, True).show((int(x), int(y)))
+
     def clear_items(self):
         self.clear()
 
     def list_songs(self, songs, showing_item, thread_id):
-        if not songs:
-            return
         if thread_id != self.online_thread_id:
             return
         self.showing_item = showing_item
+        self.showing_songs = songs
         self.clear_items();
+        if not songs:
+            return
         if not isinstance(songs[0], Song):
             songs = [Song(song) for song in songs]
         self.add_songs(songs)
@@ -176,18 +193,6 @@ class MusicView(TreeView):
 
     def dump_songs(self):
         return [ song.get_dict() for song in self.get_songs() ]
-
-    @property
-    def list_id(self):
-        if self.view_data:
-            try:
-                playlist_id = self.view_data.get("id", "")
-            except:
-                playlist_id = ""
-        else:
-            playlist_id = ""
-
-        return playlist_id
 
     @property
     def current_song(self):
