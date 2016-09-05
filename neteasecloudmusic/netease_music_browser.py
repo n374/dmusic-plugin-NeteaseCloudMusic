@@ -6,6 +6,7 @@ from dtk.ui.browser import WebView
 
 from widget.ui import NetworkConnectFailed
 from dtk.ui.dialog import DialogBox, DIALOG_MASK_MULTIPLE_PAGE
+from HTMLParser import HTMLParser
 
 from deepin_utils.net import is_network_connected
 from netease_music_player import neteasecloud_music_player, player_interface
@@ -299,6 +300,7 @@ class SearchSongItem(TreeItem):
 
         TreeItem.__init__(self)
 
+        self.song_error = False
         self.update(song)
         self.height = 26
 
@@ -317,7 +319,10 @@ class SearchSongItem(TreeItem):
         self.title = song.get_str("name")
         self.artist = ','.join([artist['name'] for artist in
             song['artists']])
+        self.album = song["album"]["name"]
         self.length = utils.duration_to_string(int(song.get_str("duration")))
+
+        self.tooltip_text = "曲名：" + self.title + "\n歌手：" + self.artist + "\n时长：" + self.length + "\n专辑：" + self.album
 
         # Calculate item size.
         self.title_padding_x = 15
@@ -333,6 +338,11 @@ class SearchSongItem(TreeItem):
         (self.length_width, self.length_height) = get_content_size(self.length, DEFAULT_FONT_SIZE)
 
         if redraw:
+            self.emit_redraw_request()
+
+    def set_error(self):
+        if not self.song_error:
+            self.song_error = True
             self.emit_redraw_request()
 
     def clear_error(self):
@@ -401,7 +411,6 @@ class SearchSongItem(TreeItem):
         '''Get sizes.'''
         return (156, 51, 102)
 
-
     def get_column_renders(self):
         '''Get render callbacks.'''
 
@@ -430,6 +439,8 @@ class SearchSongItem(TreeItem):
         self.emit_redraw_request()
 
     def hover(self, column, offset_x, offset_y):
+        event_manager.emit("update-song-tooltip",
+                HTMLParser().unescape(self.tooltip_text))
         self.is_hover = True
         self.emit_redraw_request()
 
@@ -472,6 +483,8 @@ class SongView(TreeView):
         self.connect("double-click-item", self.on_music_view_double_click)
         self.connect("press-return", self.on_music_view_press_return)
         self.connect("right-press-items", self.on_music_view_right_press_items)
+        event_manager.connect("update-song-tooltip",
+                self.update_song_tooltip)
 
         self.onlinelist_thread_id = 0
 
@@ -533,6 +546,9 @@ class SongView(TreeView):
     def get_sids(self, items):
         return ",".join([str(item.song['sid']) for item in items if
             item.song.get('sid', None)])
+
+    def update_song_tooltip(self, widget, text):
+        self.set_tooltip_text(text)
 
     def clear_items(self):
         self.clear()
