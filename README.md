@@ -26,7 +26,7 @@
 
 - 支持从网易获取歌词及封面
 
-- 在自行添加歌曲id加密代码的情况下可以实现320K，[详见](https://github.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/issues/5#issuecomment-99753615)
+- ~~在自行添加歌曲id加密代码的情况下可以实现320K，[详见](https://github.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/issues/5#issuecomment-99753615)~~ 已失效
 
 ![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot006.png)
 ![](https://raw.githubusercontent.com/wu-nerd/dmusic-plugin-NeteaseCloudMusic/master/neteasecloudmusic/images/screenshot007.png)
