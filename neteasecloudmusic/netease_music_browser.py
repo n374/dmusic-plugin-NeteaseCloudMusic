@@ -750,7 +750,7 @@ class LoginDialog(DialogBox):
                             line = line.split()
                             cookie[line[5]] = line[6]
                 nplayer.cookies = cookie
-                nplayer.save_cookie(cookie)
+                nplayer.save_uid_and_cookies()
                 print 'login-success emit from LoginDialog'
                 event_manager.emit("login-success")
                 self.close()

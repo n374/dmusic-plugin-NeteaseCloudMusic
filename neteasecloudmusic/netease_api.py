@@ -105,9 +105,9 @@ class NetEase(object):
             )
             connection.encoding = "UTF-8"
             connection = json.loads(connection.text)
-            self.uid = connection['account']['id']
-            self.save_cookie(self.session.cookies)
+            self.uid = connection['profile']['userId']
             self.cookies = self.session.cookies
+            self.save_uid_and_cookies()
             return self.session.cookies
         except:
             print 'login failed'
@@ -115,8 +115,7 @@ class NetEase(object):
 
     def get_uid(self):
         try:
-            self.uid = re.match('\d+',
-                    dict(self.cookies)['NETEASE_WDA_UID']).group()
+            self.uid = utils.load_db(self.cookie_db_file)[0]
             return self.uid
         except:
             print 'get uid failed'
@@ -135,12 +134,15 @@ class NetEase(object):
             print "get_user_detail failed"
             return None
 
-    def save_cookie(self, cookie=None):
-        utils.save_db(cookie, self.cookie_db_file)
+    def save_uid_and_cookies(self, not_empty=True):
+        if not_empty:
+            utils.save_db([self.uid, self.cookies], self.cookie_db_file)
+        else:
+            utils.save_db(None, self.cookie_db_file)
 
     def load_cookie(self):
         try:
-            return utils.load_db(self.cookie_db_file)
+            return utils.load_db(self.cookie_db_file)[1]
         except:
             print 'load cookie failed'
             return None
